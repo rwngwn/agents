@@ -1,6 +1,6 @@
 # SDLC Agent System for OpenCode
 
-21 custom AI agents covering the full software development lifecycle — from raw idea to security audit. Built for [OpenCode](https://opencode.ai), powered by [Superpowers](https://github.com/obra/superpowers) skills.
+21 custom AI agents covering the full software development lifecycle — from raw idea to security audit. Built for [OpenCode](https://opencode.ai).
 
 ## Quick Start
 
@@ -13,7 +13,7 @@ cd agents
 Or manually:
 
 ```bash
-cp *.md ~/.config/opencode/agents/
+find agents/ -name "*.md" | xargs -I{} cp {} ~/.config/opencode/agents/
 cp AGENTS.md ~/.config/opencode/AGENTS.md
 ```
 
@@ -135,7 +135,6 @@ Subagents are invoked automatically by orchestrators via the Task tool. Hidden s
 ## Prerequisites
 
 - [OpenCode](https://opencode.ai)
-- [Superpowers](https://github.com/obra/superpowers) skills installed for OpenCode
 
 ### Optional
 
@@ -155,41 +154,45 @@ Agents that use Beads: spec, spec-tasks, architect. If you don't use Beads, thes
 3. **Self-contained handoff** — subagents start with clean context; everything they need is in the prompt.
 4. **Human-in-the-Loop** — key decisions require your approval before the pipeline proceeds.
 5. **No built-in overrides** — uses `sdlc-plan`/`sdlc-build` to preserve OpenCode's built-in `plan`/`build` agents.
-6. **Behaviors embedded, not referenced** — skill-derived behaviors are baked directly into agent descriptions, not loaded as external dependencies at runtime.
-
-## Relationship to Superpowers
-
-This agent system was designed to work with [Superpowers](https://github.com/obra/superpowers) skills. Key behaviors from 14 Superpowers skills (brainstorming, TDD, systematic debugging, verification-before-completion, etc.) are embedded directly into the agent descriptions — agents carry their workflows with them rather than loading skills at runtime.
-
-The agents repo is standalone: you can install it without Superpowers if you want just the agent pipeline. But the full workflow (skills + agents) is the intended experience.
 
 ## File Structure
 
 ```
-AGENTS.md                  # Master architecture doc (copied to ~/.config/opencode/)
-README.md                  # This file
-install.sh                 # Install script
-sdlc-plan.md              # Primary: planning orchestrator
-sdlc-build.md             # Primary: build orchestrator
-debugger.md               # Primary: bug investigation
-security-reviewer.md      # Primary: security audit orchestrator
-tech-storyteller.md        # Primary: technical content
-discovery.md              # Subagent: market/user research
-strategist.md             # Subagent: product strategy
-pm-writer.md              # Subagent: PRD writing
-system-architect.md       # Subagent: technical design
-spec.md                   # Subagent: codebase analysis & planning
-spec-tasks.md             # Subagent: Beads task creation
-qa-strategist.md          # Subagent: test strategy
-architect.md              # Subagent: task briefs & dispatch
-builder-worker.md         # Subagent: code implementation
-builder-reviewer.md       # Subagent: code review
-security-pre-reviewer.md  # Subagent: shift-left security gate
-secrets-scanner.md        # Subagent: secrets detection
-code-vuln-scanner.md      # Subagent: vulnerability scanning
-deps-scanner.md           # Subagent: dependency scanning
-config-scanner.md         # Subagent: configuration scanning
-tech-writer.md            # Subagent: documentation
+AGENTS.md                        # Master architecture doc (copied to ~/.config/opencode/)
+README.md                        # This file
+install.sh                       # Install script — flattens agents/**/ into ~/.config/opencode/agents/
+
+agents/
+  primary/
+    sdlc-plan.md                 # Idea → discovery → strategy → PRD → tech design → tasks
+    sdlc-build.md                # Epic or plan → QA → architect → parallel workers
+    debugger.md                  # Bug investigation → root cause → fix
+    security-reviewer.md         # 4 parallel scanners → consolidated report
+    tech-storyteller.md          # Blog posts, case studies, launch narratives
+
+  plan/                          # sdlc-plan subagents
+    discovery.md                 # Market research, personas, competitive analysis
+    strategist.md                # Product strategy, OKRs, PR/FAQ
+    pm-writer.md                 # PRDs, feature specs, product briefs
+    system-architect.md          # Tech design, DB schema, API design
+
+  build/                         # sdlc-build subagents
+    spec.md                      # Codebase analysis, shared context, implementation plan
+    spec-tasks.md                # Mechanical Beads task creation
+    qa-strategist.md             # Test strategy, edge case matrices
+    architect.md                 # Task briefs, parallel worker/reviewer dispatch
+    builder-worker.md            # Code implementation per Task Brief
+    builder-reviewer.md          # Independent code review
+
+  security/                      # Security subagents (all run in parallel)
+    security-pre-reviewer.md     # Shift-left gate — reviews briefs before implementation
+    secrets-scanner.md           # Hardcoded secrets, API keys, credentials
+    code-vuln-scanner.md         # OWASP Top 10, injection, auth flaws
+    deps-scanner.md              # CVEs, outdated packages, supply chain risks
+    config-scanner.md            # CORS, CSP, headers, debug mode, TLS
+
+  standalone/
+    tech-writer.md               # API docs, README, migration guides, changelogs
 ```
 
 ## License

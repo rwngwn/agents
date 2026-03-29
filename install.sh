@@ -1,6 +1,6 @@
 #!/bin/bash
 # Install SDLC agents for OpenCode
-# Copies agent .md files and AGENTS.md to ~/.config/opencode/
+# Flattens all agent .md files from agents/**/ into ~/.config/opencode/agents/
 
 set -e
 
@@ -11,23 +11,21 @@ CONFIG_DIR="$HOME/.config/opencode"
 # Create directories if needed
 mkdir -p "$AGENTS_DIR"
 
-# Count agent files (exclude README, AGENTS.md, install.sh, .git)
-AGENT_COUNT=$(ls "$SCRIPT_DIR"/*.md 2>/dev/null | grep -v README.md | grep -v AGENTS.md | wc -l | tr -d ' ')
+# Find all agent .md files under agents/ subdirectory
+AGENT_FILES=$(find "$SCRIPT_DIR/agents" -name "*.md" 2>/dev/null)
+AGENT_COUNT=$(echo "$AGENT_FILES" | grep -c "." || true)
 
 if [ "$AGENT_COUNT" -eq 0 ]; then
-  echo "Error: No agent .md files found in $SCRIPT_DIR"
+  echo "Error: No agent .md files found under $SCRIPT_DIR/agents/"
   exit 1
 fi
 
-# Copy agent files
+# Copy agent files — flatten into agents dir (filenames are unique across subdirs)
 echo "Installing $AGENT_COUNT agent files to $AGENTS_DIR/"
-for f in "$SCRIPT_DIR"/*.md; do
-  basename="$(basename "$f")"
-  # Skip non-agent files
-  [ "$basename" = "README.md" ] && continue
-  [ "$basename" = "AGENTS.md" ] && continue
-  cp "$f" "$AGENTS_DIR/$basename"
-done
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  cp "$f" "$AGENTS_DIR/$(basename "$f")"
+done <<< "$AGENT_FILES"
 
 # Copy AGENTS.md to config root
 if [ -f "$SCRIPT_DIR/AGENTS.md" ]; then
