@@ -119,6 +119,10 @@ architect as supplementary context.
 
 ## Step 4 — Dispatch to architect
 
+**Do not announce that you are about to invoke the architect. Invoke it immediately
+via the Task tool.** Only report to the user after the Task tool returns with the
+architect's output. Narrating intent without making the tool call is not dispatching.
+
 Pass all context to the `architect` subagent via the Task tool. The architect
 starts with zero context — always include:
 

@@ -71,6 +71,10 @@ Before invoking any subagent:
 
 ## Step 1 — Discovery phase
 
+**Do not announce that you are invoking a subagent. Make the Task tool call
+immediately.** Only present output to the user after the tool returns. Narrating
+intent without making the tool call does nothing.
+
 Invoke the `discovery` subagent via the Task tool with:
 - The user's idea/concept
 - Any clarifications gathered in Step 0
@@ -96,7 +100,22 @@ Wait for explicit approval before proceeding.
 
 ## Step 2 — Strategy phase
 
-Invoke the `strategist` subagent via the Task tool with:
+Before invoking the strategist, ask the user whether to run it. Use the `question` tool:
+
+    ## Discovery approved — ready for strategy phase
+
+    The strategist produces: strategic bets, OKRs, PR/FAQ, and a founding hypothesis.
+    This is most useful for new products, external-facing features, or when stakeholder
+    alignment matters. It can be skipped for internal tools, prototypes, or when you
+    already have a clear direction.
+
+    Options:
+    A) Run strategist — produce full strategy document
+    B) Skip strategist — proceed directly to PRD
+
+Wait for the user's choice before proceeding.
+
+If the user chooses **A**, invoke the `strategist` subagent via the Task tool with:
 - The approved discovery output (personas, competitive landscape)
 - The original idea/vision
 
@@ -118,6 +137,10 @@ HIL checkpoint — use the `question` tool:
 
 Wait for explicit approval before proceeding.
 
+If the user chooses **B** (skip), proceed directly to Step 3 with only the discovery
+output as strategic context for pm-writer. Note in the pm-writer prompt that strategy
+was skipped.
+
 **Note on parallelism**: Discovery and strategy are sequential (strategy requires
 discovery output). Do NOT dispatch them in parallel.
 
@@ -131,13 +154,16 @@ Invoke the `pm-writer` subagent (Workflow F) via the Task tool with:
 
 Instruct pm-writer explicitly: "Mode: Workflow F — Write PRD"
 
-Present the subagent's full output (or saved file path + summary) to the user.
+Present the subagent's full output to the user. The pm-writer will report the saved
+file path — always include it explicitly so the user knows where to read the PRD.
 
 HIL checkpoint — use the `question` tool:
 
     ## PRD complete
 
-    <paste the PRD or summary with file path>
+    PRD saved to `<file path reported by pm-writer>` — open it to review the full document.
+
+    <paste PRD summary: executive summary + feature list>
 
     ---
     Ready to move to tech design, or would you like to revise?

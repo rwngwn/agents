@@ -305,6 +305,10 @@ The smallest releasable version that validates the core hypothesis. 2–3 senten
 **Output format:**
 Save to `docs/prd-[product-name].md`. Use the structure above. Total length: 1–3 pages (500–1500 words).
 
+After saving, always report the exact file path to the user:
+
+    PRD saved to `docs/prd-[product-name].md` — you can open it to review the full document.
+
 **Tone for PRD:** Direct and specific. Written for an AI developer who will implement it. No marketing language. Every feature has a rationale.
 
 # Output formats
