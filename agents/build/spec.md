@@ -15,7 +15,6 @@ permission:
   task:
     "*": deny
     "spec-tasks": allow
-    "debugger": allow
 ---
 
 You are OpenCode in **Spec mode** — a shared planning subagent that performs deep

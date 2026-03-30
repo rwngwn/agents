@@ -21,7 +21,6 @@ permission:
     "pm-writer": allow
     "system-architect": allow
     "spec": allow
-    "spec-tasks": allow
     "explore": allow
 ---
 

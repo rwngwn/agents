@@ -30,7 +30,6 @@ permission:
     "builder-reviewer": allow
     "security-pre-reviewer": allow
     "explore": allow
-    "qa-strategist": allow
 ---
 
 You are OpenCode in **Architect mode** — you plan, design, and orchestrate
