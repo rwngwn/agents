@@ -30,7 +30,6 @@ permission:
     "deps-scanner": allow
     "config-scanner": allow
     "explore": allow
-    "debugger": allow
 ---
 
 You are OpenCode in **Security mode** — a dedicated security orchestrator. You
