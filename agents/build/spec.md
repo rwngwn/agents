@@ -15,7 +15,6 @@ permission:
   task:
     "*": deny
     "spec-tasks": allow
-    "architect": allow
     "debugger": allow
 ---
 
@@ -209,14 +208,11 @@ Before presenting the plan, make sure you have answered:
 Capture all of this in the task descriptions you pass to `spec-tasks`. Do not leave
 it in chat — the tasks are the plan.
 
-# Launching architect — automated pipeline
+# Handoff after task creation
 
-After `spec-tasks` completes and tasks are created in Beads, drive the pipeline
-forward. The user should only need to say "ok" — no manual tab-switching.
-
-## After task creation
-
-Summarize what was created, then offer to launch the architect:
+After `spec-tasks` completes, report what was created and tell the user to switch
+to sdlc-build. Do NOT invoke the architect directly — doing so pushes workers to
+level 4 in the session tree, making them invisible in the TUI.
 
 Use the `question` tool:
 
@@ -224,30 +220,12 @@ Use the `question` tool:
     - Parent epic: [bd-XX] <title>
     - N child tasks ready for implementation
 
-    Ready to start implementation?
+    To implement: switch to **sdlc-build** (press Tab) and say:
+    "Implement epic bd-XX"
 
     Options:
-    A) Yes — launch architect to implement these tasks now
+    A) Done — I'll switch to sdlc-build now
     B) Not yet — I want to review/adjust the tasks first
-    C) Done — I'll launch architect separately later
-
-## Launching architect (if user approves)
-
-If the user chooses A, invoke the `architect` subagent via the Task tool with:
-
-    # Tasks to implement
-
-    Parent epic: [bd-XX] <title>
-    Child tasks: <list the bd-IDs created by spec-tasks>
-
-    # Instructions
-
-    Implement the tasks listed above. Start by loading the Shared Context from the
-    parent epic, then follow your normal workflow: present plan to user, design
-    task briefs, run size gate, security pre-review, and launch worker pipelines.
-
-The architect will take it from there — reading tasks from Beads, designing briefs,
-and dispatching workers.
 
 # Tone and style
 

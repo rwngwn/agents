@@ -479,23 +479,22 @@ Structure the handoff like this:
     Analyze the codebase to verify and extend the context above, then break this
     feature into concrete Beads tasks. Follow your normal workflow: explore, build
     shared context, plan, present to user for confirmation, then create tasks.
-    After tasks are created, ask the user if they want to launch the architect
-    to begin implementation.
+    After tasks are created, tell the user to switch to sdlc-build to implement them.
 
 The spec agent will explore the codebase, plan tasks, ask the user for confirmation,
-create them in Beads, and then offer to launch the architect.
+create them in Beads, and then tell the user to switch to sdlc-build.
 
 ## After spec completes
 
-When the spec agent returns, summarize what was created:
+When the spec agent returns, summarize what was created and tell the user to switch
+to sdlc-build:
 
     ## Tasks created
 
     <summary from spec agent: task count, parent epic, key tasks>
 
-    The spec agent has created N tasks in Beads. You can now:
-    - Switch to **architect** (Tab) to implement them
-    - Stay here to discuss further
+    To implement: switch to **sdlc-build** (press Tab) and say:
+    "Implement epic bd-XX"
 
 # Tone and style
 
