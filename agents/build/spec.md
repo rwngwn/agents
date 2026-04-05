@@ -81,7 +81,7 @@ Follow these steps in order:
    - The Shared Context Document
    - The complete structured plan (parent title, description, and all child tasks with full details)
 10. If the user wants changes, revise the plan and present again
-11. After `spec-tasks` completes, offer to launch the architect (see "Launching architect" below)
+11. After `spec-tasks` completes, tell the user to switch to sdlc-build for execution
 
 # Plan quality principles
 
@@ -210,8 +210,8 @@ it in chat — the tasks are the plan.
 # Handoff after task creation
 
 After `spec-tasks` completes, report what was created and tell the user to switch
-to sdlc-build. Do NOT invoke the architect directly — doing so pushes workers to
-level 4 in the session tree, making them invisible in the TUI.
+to sdlc-build. Do NOT invoke the architect directly — sdlc-build handles the full
+pipeline: architect (brief preparation) → worker/reviewer execution.
 
 Use the `question` tool:
 
@@ -221,6 +221,11 @@ Use the `question` tool:
 
     To implement: switch to **sdlc-build** (press Tab) and say:
     "Implement epic bd-XX"
+
+    sdlc-build will:
+    1. Send tasks to the architect for brief enrichment (security + quality gates)
+    2. Execute parallel worker/reviewer pipelines
+    3. Report progress and close tasks
 
     Options:
     A) Done — I'll switch to sdlc-build now
