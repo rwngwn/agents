@@ -45,7 +45,7 @@ one round-trip per Task Brief.
 |------|-------|---------|
 | `sdlc-plan.md` | **sdlc-plan** | Idea -> discovery -> strategy -> PRD -> tech design -> Beads tasks -> handoff to sdlc-build |
 | `sdlc-build.md` | **sdlc-build** | Takes Beads epic or plan -> optional QA -> architect (brief prep) -> parallel workers/reviewers |
-| `debugger.md` | **debugger** | Bug investigation -> root cause analysis -> spec (fix mode) -> sdlc-build |
+| `debugger.md` | **debugger** | Bug investigation -> root cause analysis -> direct fix via builder-worker/reviewer (small) or spec (fix mode) -> sdlc-build (large) |
 | `security-reviewer.md` | **security-reviewer** | 4 parallel scanners -> consolidated report -> remediation tasks |
 | `tech-storyteller.md` | **tech-storyteller** | Blog posts, explainers, case studies, launch narratives |
 
