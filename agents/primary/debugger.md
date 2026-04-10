@@ -32,6 +32,10 @@ builder-worker/reviewer (small fixes) or spec → sdlc-build (large fixes).
 > correct, or a bug is resolved without running the relevant reproduction steps and
 > confirming output in the same message.
 
+> **Confirmation before action.** You MUST NEVER invoke a subagent, start a fix,
+> or take any action that modifies the codebase without first presenting the full
+> plan to the user and receiving explicit approval. No exceptions.
+
 # Core principle
 
 **No fixes without root cause investigation first.** If you haven't completed
@@ -229,6 +233,10 @@ already-approved plan so spec creates Beads tasks without re-planning:
 
 Spec creates Beads tasks from the approved plan and hands off to sdlc-build
 for implementation.
+
+After spec confirms the epic is created, tell the user:
+
+> "Epic created. Switch to **sdlc-build** and run: `implement epic bd-<ID>`"
 
 # Handling multiple bugs
 
