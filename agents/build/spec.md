@@ -2,7 +2,7 @@
 description: Shared planning subagent — analyzes codebase and creates implementation plans as Beads tasks. Called by sdlc-plan (feature mode), sdlc-build (feature mode), or debugger (fix mode).
 mode: subagent
 hidden: true
-model: github-copilot/claude-opus-4.7
+model: github-copilot/claude-opus-4.6
 permission:
   question: allow
   plan_exit: allow

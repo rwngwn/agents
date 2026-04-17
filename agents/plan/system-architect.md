@@ -1,7 +1,7 @@
 ---
 description: System architect subagent — tech design, DB schema, API design, application architecture. Invoked by sdlc-plan orchestrator.
 mode: subagent
-model: github-copilot/claude-opus-4.7
+model: github-copilot/claude-opus-4.6
 hidden: true
 permission:
   edit:
