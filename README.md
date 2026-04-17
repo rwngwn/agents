@@ -49,10 +49,10 @@ Then restart OpenCode. Press **Tab** to cycle through the 5 primary agents.
 
 | Agent | Model | Purpose |
 |-------|-------|---------|
-| **sdlc-plan** | claude-opus-4.6 | Idea → discovery → strategy → PRD → tech design → Beads tasks |
+| **sdlc-plan** | claude-opus-4.7 | Idea → discovery → strategy → PRD → tech design → Beads tasks |
 | **sdlc-build** | claude-sonnet-4.6 | Beads epic or plan → QA → architect → parallel workers/reviewers |
-| **debugger** | claude-opus-4.6 | Bug investigation → root cause → spec (fix mode) → sdlc-build |
-| **security-reviewer** | claude-opus-4.6 | 4 parallel scanners → consolidated report → remediation tasks |
+| **debugger** | claude-opus-4.7 | Bug investigation → root cause → spec (fix mode) → sdlc-build |
+| **security-reviewer** | claude-opus-4.7 | 4 parallel scanners → consolidated report → remediation tasks |
 | **tech-storyteller** | claude-sonnet-4.6 | Blog posts, explainers, case studies, launch narratives |
 
 ## Subagents
@@ -65,14 +65,14 @@ Subagents are invoked automatically by orchestrators via the Task tool. Hidden s
 |----------|-------|------|
 | discovery | claude-sonnet-4.6 | Market research, personas, competitive analysis, journey mapping |
 | strategist | claude-sonnet-4.6 | Product strategy, OKRs, PR/FAQ, founding hypothesis |
-| pm-writer | claude-opus-4.6 | PRDs, feature specs, product briefs |
-| system-architect | claude-opus-4.6 | Tech design, DB schema, API design, application architecture |
+| pm-writer | claude-opus-4.7 | PRDs, feature specs, product briefs |
+| system-architect | claude-opus-4.7 | Tech design, DB schema, API design, application architecture |
 
 ### sdlc-build pipeline
 
 | Subagent | Model | Role |
 |----------|-------|------|
-| spec | claude-opus-4.6 | Codebase analysis, shared context, implementation plan |
+| spec | claude-opus-4.7 | Codebase analysis, shared context, implementation plan |
 | spec-tasks | claude-haiku-4.5 | Mechanical Beads task creation from approved plan |
 | qa-strategist | claude-sonnet-4.6 | Test strategy, edge case matrices, regression suites |
 | architect | claude-sonnet-4.6 | Task Briefs, parallel worker/reviewer pipelines |
@@ -99,7 +99,7 @@ Subagents are invoked automatically by orchestrators via the Task tool. Hidden s
 
 | Model | Role | Agents |
 |-------|------|--------|
-| **claude-opus-4.6** | Heavy reasoning | sdlc-plan, pm-writer, system-architect, spec, debugger, security-reviewer |
+| **claude-opus-4.7** | Heavy reasoning | sdlc-plan, pm-writer, system-architect, spec, debugger, security-reviewer |
 | **claude-sonnet-4.6** | Implementation & structured output | sdlc-build, architect, builder-worker, discovery, strategist, qa-strategist, all security scanners, tech-writer, tech-storyteller |
 | **gpt-5.3-codex** | Code review | builder-reviewer |
 | **claude-haiku-4.5** | Mechanical tasks | spec-tasks |

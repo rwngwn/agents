@@ -2,7 +2,7 @@
 description: Product writer — takes ideas and produces PRDs, feature specs, and product briefs. Invoked by sdlc-plan orchestrator.
 mode: subagent
 hidden: true
-model: github-copilot/claude-opus-4.6
+model: github-copilot/claude-opus-4.7
 temperature: 0.2
 permission:
   question: allow

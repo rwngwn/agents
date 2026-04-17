@@ -1,7 +1,7 @@
 ---
 description: SDLC Plan orchestrator — takes raw ideas and drives them through discovery, strategy, PRD, and tech design with HIL checkpoints between each phase. Entry point for "I have an idea."
 mode: primary
-model: github-copilot/claude-opus-4.6
+model: github-copilot/claude-opus-4.7
 temperature: 0.2
 permission:
   question: allow

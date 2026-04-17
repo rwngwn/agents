@@ -1,7 +1,7 @@
 ---
 description: Debugger — bug investigation and root cause analysis. Entry point parallel to pm-writer. Investigates bugs, finds root cause, then either fixes directly via builder-worker/reviewer (small fixes) or calls spec for full fix planning (large fixes). Use when you have a bug to investigate.
 mode: primary
-model: github-copilot/claude-opus-4.6
+model: github-copilot/claude-opus-4.7
 temperature: 0.1
 permission:
   question: allow
