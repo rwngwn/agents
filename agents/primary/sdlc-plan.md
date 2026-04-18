@@ -145,6 +145,37 @@ discovery output). Do NOT dispatch them in parallel.
 
 ## Step 3 — PRD phase
 
+### Feature volume check
+
+Before invoking pm-writer, count the number of distinct user-facing features implied
+by the approved discovery + strategy output. A "feature" is a distinct capability
+a user would notice (e.g. "user registration", "search", "notifications").
+
+**If there are 6 or fewer features:** proceed with a single pm-writer call (standard path).
+
+**If there are 7 or more features:** split into parallel PRDs.
+
+Use the `question` tool:
+
+    ## Large scope detected — <N> features identified
+
+    <list the features grouped into 2–3 coherent clusters, e.g.:
+      Cluster A — Core: registration, profile, onboarding
+      Cluster B — Engagement: notifications, feed, search
+      Cluster C — Monetisation: payments, subscriptions, billing>
+
+    Writing one PRD for this scope will produce a document too broad to action.
+    I recommend splitting into parallel PRDs, one per cluster.
+
+    Options:
+    A) Split into parallel PRDs (recommended) — faster, more focused
+    B) Write a single PRD for the full scope
+    C) Let me redefine the clusters
+
+Wait for the user's choice.
+
+### Single PRD path (≤6 features or user chose B)
+
 Invoke the `pm-writer` subagent (Workflow F) via the Task tool with:
 - The original idea/vision from the user
 - The approved discovery output
@@ -174,6 +205,41 @@ HIL checkpoint — use the `question` tool:
 
 Wait for explicit approval before proceeding.
 
+### Parallel PRD path (≥7 features and user chose A)
+
+Dispatch **all pm-writer subagents simultaneously** in a single Task tool message
+(one Task call per cluster). Each pm-writer receives:
+- The cluster's feature list and description
+- The approved discovery output
+- The approved strategy output
+- Instruction: "Mode: Workflow F — Write PRD. Scope is limited to this cluster only."
+
+Wait for all parallel pm-writers to return, then present all PRDs together:
+
+    ## <N> parallel PRDs complete
+
+    **PRD A — <Cluster name>**: saved to `<path>`
+      <2–3 sentence summary>
+
+    **PRD B — <Cluster name>**: saved to `<path>`
+      <2–3 sentence summary>
+
+    **PRD C — <Cluster name>** (if applicable): saved to `<path>`
+      <2–3 sentence summary>
+
+    ---
+    Review each file. Ready to move to tech design across all PRDs, or revise?
+
+    Options:
+    A) Approve all — proceed to tech design
+    B) Revise PRD <letter> — <what to change>
+    C) Stop here
+
+For tech design (Step 4), pass all approved PRDs to `system-architect` together.
+The architect will produce a unified tech design spanning all clusters.
+
+Wait for explicit approval before proceeding.
+
 ## Step 4 — Tech design phase
 
 Invoke the `system-architect` subagent via the Task tool with:
@@ -199,20 +265,37 @@ HIL checkpoint — use the `question` tool:
 
 ## Step 5 — Create Beads tasks
 
-After tech design is approved, invoke `spec` to analyze the codebase and produce
-an implementation plan, then invoke `spec-tasks` to create the tasks in Beads.
+After tech design is approved, create Beads epics. The number of epics matches
+the number of approved PRDs.
 
-1. Invoke `spec` (feature mode) with:
-   - The approved PRD
-   - The approved tech design
-   - Any codebase context gathered during planning
+### Single PRD path
 
+1. Invoke `spec` (feature mode) with the approved PRD + tech design.
 2. Present the spec's implementation plan to the user for approval.
+3. After approval, invoke `spec-tasks` to create one epic with child tasks.
+4. Report the created epic ID and task list.
 
-3. After plan approval, invoke `spec-tasks` with the approved plan to create
-   an epic and child tasks in Beads.
+### Parallel PRD path (multiple clusters)
 
-4. Report the created epic ID and task list to the user.
+Dispatch **all spec subagents simultaneously** in a single message — one `spec`
+call per approved PRD. Each spec call receives:
+- Its cluster's PRD
+- The unified tech design (shared across all specs)
+- Any codebase context
+
+Wait for all spec agents to return, then present all implementation plans together
+for a single joint HIL approval.
+
+After approval, dispatch **all spec-tasks subagents simultaneously** — one per
+plan. Each produces its own epic with child tasks.
+
+Report all created epics:
+
+    ## Beads epics created
+
+    Epic A — <Cluster name>: `<epic-id>` — <N> tasks
+    Epic B — <Cluster name>: `<epic-id>` — <N> tasks
+    Epic C — <Cluster name>` (if applicable): `<epic-id>` — <N> tasks
 
 ## Step 6 — Handoff to sdlc-build
 
@@ -225,20 +308,21 @@ Use the `question` tool:
     All 4 phases approved + implementation tasks created:
     - Discovery — personas, journey maps, competitive landscape
     - Strategy — OKRs, PR/FAQ, founding hypothesis
-    - PRD — user stories, MoSCoW features, MVP definition
+    - PRD — <1 PRD / N parallel PRDs> covering all features
     - Tech design — architecture, schema, API contracts, component design
-    - Beads epic: <epic ID> with <N> tasks
+    - Beads epics: <list epic IDs with cluster names>
 
     Ready to start implementation?
 
     Options:
-    A) Yes — switch to sdlc-build to implement this epic
+    A) Yes — switch to sdlc-build to implement these epics
     B) Not yet — I want to review or refine tasks first
     C) Done — I'll launch sdlc-build separately
 
 If the user chooses A, tell them to switch to the **sdlc-build** agent (Tab to
-cycle agents) and provide the epic ID: "Switch to sdlc-build and tell it to
-implement epic `<epic-id>`."
+cycle agents). For a single epic: "implement epic `<id>`". For multiple epics,
+list them all — they can be tackled in parallel or sequentially:
+"implement epics `<id-A>`, `<id-B>`, `<id-C>`."
 
 **Note:** You cannot invoke sdlc-build directly (it's a separate primary agent).
 The handoff is informational — tell the user what to do next.
@@ -248,7 +332,7 @@ The handoff is informational — tell the user what to do next.
 If the user already has some phases done (e.g. "I already have a PRD, just
 design the tech"), skip to the appropriate phase:
 - "I have personas/research" -> skip to Step 2 (strategy)
-- "I have a strategy" -> skip to Step 3 (PRD)
+- "I have a strategy" -> skip to Step 3 (PRD — single or parallel depending on feature count)
 - "I have a PRD" -> skip to Step 4 (tech design)
 - "I have a PRD and tech design" -> skip to Step 5 (Beads tasks)
 - "I have tasks in Beads" -> skip to Step 6 (sdlc-build handoff)
