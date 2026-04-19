@@ -3,7 +3,7 @@ name: code-vuln-scanner
 description: Subagent of security-reviewer. Deep static analysis for code vulnerabilities -- injection, broken auth, broken access control, crypto failures, SSRF, and business logic flaws. OWASP Top 10 focused.
 mode: subagent
 hidden: true
-model: github-copilot/gpt-5-mini
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 permission:
   edit:
