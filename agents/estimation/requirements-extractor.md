@@ -2,7 +2,7 @@
 description: Requirements extractor subagent — parses RFP text and produces a structured JSON of requirements, use cases, integrations, NFRs, and initial open questions with page-level citations. Invoked by estimator.
 mode: subagent
 hidden: true
-model: github-copilot/claude-sonnet-4.5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.1
 permission:
   question: deny

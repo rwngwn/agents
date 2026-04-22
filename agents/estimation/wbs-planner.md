@@ -2,7 +2,7 @@
 description: WBS planner subagent — takes extracted requirements and builds a Work Breakdown Structure with PERT 3-point estimates, role breakdown (BE/FE/QA/DevOps/PM/Analýza/Design), and architecture proposal. Internally simulates Wideband Delphi with 3 personas. Invoked by estimator.
 mode: subagent
 hidden: true
-model: github-copilot/claude-sonnet-4.5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.2
 permission:
   question: deny

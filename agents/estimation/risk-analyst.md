@@ -2,7 +2,7 @@
 description: Risk analyst subagent — identifies top project risks from requirements and brief, scores probability × impact, recommends mitigations and buffer size. Invoked by estimator in parallel with wbs-planner.
 mode: subagent
 hidden: true
-model: github-copilot/claude-sonnet-4.5
+model: github-copilot/claude-sonnet-4.6
 temperature: 0.2
 permission:
   question: deny
