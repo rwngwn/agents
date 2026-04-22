@@ -1,6 +1,6 @@
 # SDLC Agent System for OpenCode
 
-21 custom AI agents covering the full software development lifecycle — from raw idea to security audit. Built for [OpenCode](https://opencode.ai).
+26 custom AI agents covering the full software development lifecycle — from raw idea to security audit, plus RFP-to-proposal estimation. Built for [OpenCode](https://opencode.ai).
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ find agents/ -name "*.md" | xargs -I{} cp {} ~/.config/opencode/agents/
 cp AGENTS.md ~/.config/opencode/AGENTS.md
 ```
 
-Then restart OpenCode. Press **Tab** to cycle through the 5 primary agents.
+Then restart OpenCode. Press **Tab** to cycle through the 6 primary agents.
 
 ## Architecture
 
@@ -42,6 +42,10 @@ Then restart OpenCode. Press **Tab** to cycle through the 5 primary agents.
     │
     ├──▶ [tech-storyteller]  blog posts, case studies, launch narratives
     │
+    ├──▶ [estimator] ──▶ requirements-extractor (RFP PDF/DOCX/URL)
+    │                ──▶ wbs-planner ∥ risk-analyst (parallel)
+    │                ──▶ proposal-writer (Czech client proposal)
+    │
     └──▶ @tech-writer         API docs, README, migration guides, changelogs
 ```
 
@@ -54,6 +58,7 @@ Then restart OpenCode. Press **Tab** to cycle through the 5 primary agents.
 | **debugger** | claude-opus-4.6 | Bug investigation → root cause → spec (fix mode) → sdlc-build |
 | **security-reviewer** | claude-opus-4.6 | 4 parallel scanners → consolidated report → remediation tasks |
 | **tech-storyteller** | claude-sonnet-4.6 | Blog posts, explainers, case studies, launch narratives |
+| **estimator** | claude-opus-4.7 | RFP/poptávka → requirements → WBS+PERT estimation → risks → client proposal |
 
 ## Subagents
 
@@ -95,6 +100,26 @@ Subagents are invoked automatically by orchestrators via the Task tool. Hidden s
 |----------|-------|------|
 | tech-writer | claude-sonnet-4.6 | API docs, README, migration guides, changelogs |
 
+### estimator pipeline
+
+| Subagent | Model | Role |
+|----------|-------|------|
+| requirements-extractor | claude-sonnet-4.6 | RFP parsing (PDF/DOCX/URL), use cases, integrations, NFR, constraints |
+| wbs-planner | claude-sonnet-4.6 | WBS + PERT (O/M/P), role breakdown (BE/FE/QA/DevOps/PM/Analysis/Design), 3 scenarios |
+| risk-analyst | claude-sonnet-4.6 | Risk catalog + P/I scoring, mitigations, CZ-specific (GDPR, NIS2, DORA, ČNB, ÚZIS, ZZVZ) |
+| proposal-writer | claude-opus-4.7 | Client-ready proposal (12 sections) in Czech |
+
+## Skills
+
+Reusable skills loaded by agents (installed to `~/.config/opencode/skills/`):
+
+| Skill | Purpose |
+|-------|---------|
+| `rfp-pdf-extraction` | PDF/DOCX text + table extraction via `uv` + pdfplumber (fallback pdftotext, OCR tesseract `-l ces`) |
+| `estimation-pert` | PERT calculator: TE=(O+4M+P)/6, σ=(P−O)/6, aggregation σ_total=√Σσ², scenarios, sanity checks |
+| `wbs-templates` | 6 WBS templates (web-app-saas, mobile-app, integration, data-pipeline, migration, microservices) |
+| `risk-catalog` | ~30 risks in 9 categories with CZ-specific compliance items |
+
 ## Model Strategy
 
 | Model | Role | Agents |
@@ -131,6 +156,12 @@ Subagents are invoked automatically by orchestrators via the Task tool. Hidden s
 
 - `@tech-writer` → "Document the authentication API"
 - Tab to `tech-storyteller` → "Write a blog post about this release"
+
+### E) RFP / poptávka → klientská nabídka
+
+1. Tab to `estimator` → "Analyzuj RFP ./poptavka.pdf"
+   - Runs: requirements-extractor → HIL (approve brief) → wbs-planner ∥ risk-analyst (parallel) → HIL (approve estimate) → proposal-writer
+   - Outputs: `./estimates/<slug>/{brief,estimate,questions,architecture}.md` + `architecture.dsl` (Structurizr C4) + optional `proposal.md`
 
 ## Prerequisites
 
@@ -193,6 +224,18 @@ agents/
 
   standalone/
     tech-writer.md               # API docs, README, migration guides, changelogs
+
+  estimation/                    # estimator subagents
+    requirements-extractor.md    # RFP parsing, requirements JSON
+    wbs-planner.md               # WBS + PERT + role breakdown
+    risk-analyst.md              # Risk catalog + P/I scoring
+    proposal-writer.md           # Czech client proposal
+
+skills/                          # Reusable skills (SKILL.md + resources/)
+  rfp-pdf-extraction/            # uv + pdfplumber + OCR fallback
+  estimation-pert/               # PERT math (uv + pert.py)
+  wbs-templates/                 # 6 WBS templates (yaml)
+  risk-catalog/                  # ~30 risks with CZ compliance (yaml)
 ```
 
 ## License
