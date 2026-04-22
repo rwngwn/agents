@@ -5,8 +5,8 @@ raw idea to security audit.
 
 ## Architecture
 
-The system consists of 21 custom agents organized into 5 primary agents and 16
-subagents. Users press **Tab** to cycle through the 5 primary agents.
+The system consists of 26 custom agents organized into 6 primary agents and 20
+subagents, plus 4 reusable skills. Users press **Tab** to cycle through the 6 primary agents.
 Subagents are invoked automatically by orchestrators via the Task tool, or manually
 via `@mention`.
 
@@ -48,6 +48,7 @@ one round-trip per Task Brief.
 | `debugger.md` | **debugger** | Bug investigation -> root cause analysis -> direct fix via builder-worker/reviewer (small) or spec (fix mode) -> sdlc-build (large) |
 | `security-reviewer.md` | **security-reviewer** | 4 parallel scanners -> consolidated report -> remediation tasks |
 | `tech-storyteller.md` | **tech-storyteller** | Blog posts, explainers, case studies, launch narratives |
+| `estimator.md` | **estimator** | RFP/poptávka (PDF/DOCX/URL) -> requirements extraction -> WBS + PERT estimation -> risks -> client proposal |
 
 ## Subagents
 
@@ -86,6 +87,24 @@ one round-trip per Task Brief.
 | File | Agent | Purpose |
 |------|-------|---------|
 | `tech-writer.md` | tech-writer | API docs, README, migration guides, changelogs |
+
+### estimator subagents (hidden)
+
+| File | Agent | Invoked by | Purpose |
+|------|-------|-----------|---------|
+| `requirements-extractor.md` | requirements-extractor | estimator | RFP parsing (PDF/DOCX/URL), use cases, integrations, NFR, constraints (JSON schema) |
+| `wbs-planner.md` | wbs-planner | estimator | WBS + PERT estimation (O/M/P), role breakdown (BE/FE/QA/DevOps/PM/Analýza/Design), 3 scenarios, Wideband Delphi simulation |
+| `risk-analyst.md` | risk-analyst | estimator | Risk catalog + P/I scoring, mitigation strategies, CZ-specific risks (eGov, GDPR, NIS2, DORA, ČNB, ÚZIS, EAA, ZZVZ) |
+| `proposal-writer.md` | proposal-writer | estimator | Client-ready proposal (12 sections) in Czech |
+
+## Skills (reusable, loaded by agents)
+
+| Skill | Purpose |
+|-------|---------|
+| `rfp-pdf-extraction` | PDF/DOCX text + table extraction via `uv` + pdfplumber (fallback pdftotext, OCR tesseract `-l ces`) |
+| `estimation-pert` | PERT calculator: TE=(O+4M+P)/6, σ=(P−O)/6, agregace σ_total=√Σσ², scenarios, sanity checks |
+| `wbs-templates` | 6 WBS templates (web-app-saas, mobile-app, integration, data-pipeline, migration, microservices) |
+| `risk-catalog` | ~30 risks in 9 categories with CZ-specific compliance items |
 
 ---
 
@@ -130,6 +149,13 @@ one round-trip per Task Brief.
     +---> @tech-writer (standalone -- docs, README, changelog)
     |
     +---> [tech-storyteller] (primary -- blog posts, case studies)
+    |
+    +---> [estimator] -+-> requirements-extractor (PDF/DOCX/URL -> requirements JSON)
+                       |   HIL: approve brief
+                       +-> wbs-planner ∥ risk-analyst (parallel)
+                       |   HIL: approve estimate
+                       +-> proposal-writer (client proposal in Czech)
+                       |   Output: ./estimates/<slug>/{brief,estimate,questions,architecture}.md + architecture.dsl (+ proposal.md)
 ```
 
 ## Typical Workflows

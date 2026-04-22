@@ -1,0 +1,167 @@
+# WBS Templates — typical top-level structure per project type.
+# Each template has 2-3 levels with % allocation out of total dev effort (excluding buffers).
+# Use as STARTING SKELETON — adapt to specific RFP requirements.
+
+templates:
+
+  web-app-saas:
+    description: Multi-tenant webová SaaS aplikace s admin + end-user UI, REST/GraphQL API, PostgreSQL.
+    typical_size_md: [80, 300]
+    role_defaults:
+      Analýza: 10
+      Backend: 35
+      Frontend: 30
+      QA: 15
+      DevOps: 5
+      PM: 10
+      Design: 5
+    structure:
+      - id: "1"
+        title: Analýza a design
+        percent: 12
+        children:
+          - { id: "1.1", title: Upřesnění requirementů, role: Analýza }
+          - { id: "1.2", title: UX/UI design + wireframy, role: Design }
+          - { id: "1.3", title: Architektura + datový model, role: Backend }
+          - { id: "1.4", title: API design + kontrakty, role: Backend }
+      - id: "2"
+        title: Backend
+        percent: 35
+        children:
+          - { id: "2.1", title: Auth & identity, role: Backend }
+          - { id: "2.2", title: Core domain API, role: Backend }
+          - { id: "2.3", title: Admin API, role: Backend }
+          - { id: "2.4", title: Integrace (per integration), role: Backend }
+          - { id: "2.5", title: Background jobs / async workers, role: Backend }
+          - { id: "2.6", title: Audit log + monitoring hooks, role: Backend }
+      - id: "3"
+        title: Frontend
+        percent: 28
+        children:
+          - { id: "3.1", title: Design system + komponenty, role: Frontend }
+          - { id: "3.2", title: Auth flow (login, register, pwd reset), role: Frontend }
+          - { id: "3.3", title: End-user aplikace (main screens), role: Frontend }
+          - { id: "3.4", title: Admin UI, role: Frontend }
+          - { id: "3.5", title: Responsive + accessibility polish, role: Frontend }
+      - id: "4"
+        title: QA & testing
+        percent: 13
+        children:
+          - { id: "4.1", title: Test plan + automation setup, role: QA, cross_cutting: true }
+          - { id: "4.2", title: API + integration tests, role: QA }
+          - { id: "4.3", title: E2E tests (Playwright/Cypress), role: QA }
+          - { id: "4.4", title: Performance & security tests, role: QA }
+          - { id: "4.5", title: UAT koordinace, role: QA, cross_cutting: true }
+      - id: "5"
+        title: DevOps & infra
+        percent: 5
+        children:
+          - { id: "5.1", title: IaC (Terraform), role: DevOps, cross_cutting: true }
+          - { id: "5.2", title: CI/CD pipeline, role: DevOps, cross_cutting: true }
+          - { id: "5.3", title: Monitoring + alerting, role: DevOps, cross_cutting: true }
+          - { id: "5.4", title: Staging + prod deployment, role: DevOps }
+      - id: "6"
+        title: PM & delivery
+        percent: 7
+        children:
+          - { id: "6.1", title: Řízení projektu, reporting, role: PM, cross_cutting: true }
+          - { id: "6.2", title: Klientské schůzky + demo, role: PM, cross_cutting: true }
+          - { id: "6.3", title: Dokumentace + handover, role: Backend, cross_cutting: true }
+          - { id: "6.4", title: Hypercare (4 týdny po go-live), role: Backend, cross_cutting: true }
+
+  mobile-app:
+    description: Native (iOS/Android) nebo cross-platform (React Native / Flutter) mobilní aplikace s BE.
+    typical_size_md: [100, 400]
+    role_defaults:
+      Analýza: 8
+      Backend: 30
+      Frontend: 40   # mobile FE
+      QA: 15
+      DevOps: 5
+      PM: 8
+      Design: 12    # mobile design heavier
+    structure:
+      - { id: "1", title: Analýza a UX/UI design, percent: 15 }
+      - { id: "2", title: Backend API + push notifications, percent: 25 }
+      - { id: "3", title: Mobilní aplikace (per platforma), percent: 35 }
+      - { id: "4", title: QA + device lab testy, percent: 12 }
+      - { id: "5", title: DevOps + CI/CD (Fastlane, TestFlight), percent: 5 }
+      - { id: "6", title: App Store + Google Play submission, percent: 3 }
+      - { id: "7", title: PM + hypercare, percent: 5 }
+
+  integration:
+    description: Middleware / connector mezi dvěma (a více) systémy — transformace dat, routing, retry.
+    typical_size_md: [40, 150]
+    role_defaults:
+      Analýza: 15
+      Backend: 55
+      Frontend: 0
+      QA: 15
+      DevOps: 10
+      PM: 5
+      Design: 0
+    structure:
+      - { id: "1", title: Analýza kontraktů obou stran, percent: 18 }
+      - { id: "2", title: Transformace a mapping, percent: 25 }
+      - { id: "3", title: Routing, queuing, retry mechanismy, percent: 20 }
+      - { id: "4", title: Error handling + dead letter queue, percent: 10 }
+      - { id: "5", title: Monitoring + alerting na per-endpoint basis, percent: 8 }
+      - { id: "6", title: Testy (unit + kontraktní + end-to-end), percent: 12 }
+      - { id: "7", title: Nasazení a dokumentace, percent: 7 }
+
+  data-pipeline:
+    description: ETL / ELT pipeline, data warehouse, reportingové řešení (BI).
+    typical_size_md: [60, 250]
+    role_defaults:
+      Analýza: 15
+      Backend: 50    # data engineer
+      Frontend: 15   # dashboards
+      QA: 10
+      DevOps: 5
+      PM: 5
+    structure:
+      - { id: "1", title: Analýza zdrojů a schémat, percent: 15 }
+      - { id: "2", title: Extraction & loading, percent: 25 }
+      - { id: "3", title: Transformace (dbt / Spark), percent: 25 }
+      - { id: "4", title: Data quality checks + monitoring, percent: 10 }
+      - { id: "5", title: Reporting / BI dashboardy, percent: 15 }
+      - { id: "6", title: Deployment + orchestrace (Airflow), percent: 5 }
+      - { id: "7", title: Dokumentace + handover, percent: 5 }
+
+  migration:
+    description: Migrace legacy systému na nový — data, funkce, postupný cut-over.
+    typical_size_md: [100, 500]
+    role_defaults:
+      Analýza: 18
+      Backend: 40
+      Frontend: 18
+      QA: 15
+      DevOps: 5
+      PM: 4
+    structure:
+      - { id: "1", title: Analýza legacy systému (reverse engineering), percent: 18 }
+      - { id: "2", title: Rozvoj nového systému (feature parity), percent: 35 }
+      - { id: "3", title: Data migration scripts + validace, percent: 15 }
+      - { id: "4", title: Paralelní běh + reconciliation, percent: 10 }
+      - { id: "5", title: Cut-over plán a zpětný rollback, percent: 5 }
+      - { id: "6", title: QA + UAT (srovnávací testy), percent: 12 }
+      - { id: "7", title: Školení + hypercare, percent: 5 }
+
+  microservices:
+    description: Multi-service ekosystém, 3+ samostatných služeb, event-driven komunikace.
+    typical_size_md: [200, 1000]
+    role_defaults:
+      Analýza: 10
+      Backend: 50
+      Frontend: 15
+      QA: 12
+      DevOps: 8
+      PM: 5
+    structure:
+      - { id: "1", title: Doménový design (DDD bounded contexts), percent: 12 }
+      - { id: "2", title: Platform (service mesh, API gateway, auth), percent: 18 }
+      - { id: "3", title: Jednotlivé služby (per service), percent: 40 }
+      - { id: "4", title: Event bus + schema registry, percent: 8 }
+      - { id: "5", title: Observability (tracing, metrics, logs), percent: 7 }
+      - { id: "6", title: Frontend BFF + UI, percent: 10 }
+      - { id: "7", title: CI/CD multi-service + deployment, percent: 5 }

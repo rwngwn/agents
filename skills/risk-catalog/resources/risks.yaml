@@ -1,0 +1,403 @@
+# Risk catalog — typical software project risks with P/I defaults and mitigations.
+# Use as starting point; adapt to specific RFP context.
+# Scoring: P, I ∈ {L, M, H}; score = P*I (1..9).
+
+risks:
+
+  # ============================================================
+  # Integration risks
+  # ============================================================
+  - id: INT-NO-DOCS
+    category: integration
+    title: Integrace bez dokumentace
+    trigger: "RFP zmiňuje integraci, ale nepoužívá slova jako 'API dokumentace', 'OpenAPI', 'WSDL', 'sandbox'."
+    probability: H
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Smluvně: klient dodá dokumentaci do X dnů od startu."
+      - "První sprint: discovery call s provozovatelem integrace."
+      - "Mezičas: mock server podle návrhu."
+    contingency: "Posun milníku o 2 týdny, pokud dokumentace nedorazí."
+    owner: PM + klient
+
+  - id: INT-NO-SANDBOX
+    category: integration
+    title: Realtime integrace bez sandbox prostředí
+    trigger: "RFP požaduje realtime integraci, ale nezmiňuje test/sandbox."
+    probability: H
+    impact: H
+    effect_md: "+10 až +25 MD"
+    mitigation:
+      - "Smluvní požadavek na sandbox do X dnů od kickoffu."
+      - "Mock server s podkladovou OpenAPI."
+      - "Integrace poslední fáze (po ostatním scope)."
+    contingency: "Fallback na batch integraci, pokud sandbox neexistuje."
+    owner: PM + klient
+
+  - id: INT-UNSTABLE-THIRDPARTY
+    category: integration
+    title: Třetí strana je známá nespolehlivostí / častými změnami API
+    trigger: "Integrace je s known-unstable systémem (SAP on-prem starší verze, custom legacy, veřejné registry)."
+    probability: M
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Abstrakční vrstva + adapter pattern."
+      - "Extenzivní retry + dead letter queue."
+      - "Monitoring + alerting na chyby integrace."
+    owner: Backend tým
+
+  # ============================================================
+  # Scope risks
+  # ============================================================
+  - id: SCOPE-CREEP-AMBIGUOUS
+    category: scope
+    title: Scope creep kvůli nejasným akceptačním kritériím
+    trigger: "≥ 20 % requirementů má INVEST.testable = false."
+    probability: H
+    impact: H
+    effect_md: "+10 až +30 MD"
+    mitigation:
+      - "Workshop na upřesnění acceptance criteria (fáze 1)."
+      - "Change request procedura ve smlouvě."
+      - "Weekly demo s explicitním sign-offem."
+    contingency: "Přepočet nabídky po fázi 1."
+    owner: PM
+
+  - id: SCOPE-HIDDEN-FEATURES
+    category: scope
+    title: Skryté požadavky vyplynou při implementaci
+    trigger: "RFP obsahuje fráze typu 'dle best practices', 'standardní funkce', 'běžné chování'."
+    probability: M
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Explicitní seznam 'co není zahrnuto' ve smlouvě."
+      - "Kickoff workshop s klientem — procházení obrazovek."
+    owner: PM + Analýza
+
+  - id: SCOPE-MOSCOW-DRIFT
+    category: scope
+    title: Klient chce Should/Could jako Must po podpisu
+    trigger: "RFP nepoužívá MoSCoW; MoSCoW je inferred agentem."
+    probability: M
+    impact: M
+    effect_md: "+5 až +20 MD"
+    mitigation:
+      - "Prezentace MoSCoW klasifikace při kickoffu — explicitní schválení."
+      - "Scénáře MVP/Standard/Full jako základ jednání."
+    owner: PM
+
+  # ============================================================
+  # Tech risks
+  # ============================================================
+  - id: TECH-NEW-STACK
+    category: tech
+    title: Tech stack je nový / neznámý pro tým
+    trigger: "RFP specifikuje technologii, kterou tým má < 6 měsíců zkušenosti."
+    probability: M
+    impact: M
+    effect_md: "+10 až +25 MD"
+    mitigation:
+      - "Spike v prvním sprintu (2-3 MD)."
+      - "External review / consulting pro klíčová rozhodnutí."
+      - "Proškolení před startem."
+    owner: Tech Lead
+
+  - id: TECH-NFR-UNREALISTIC
+    category: tech
+    title: NFR jsou nereálné pro daný rozpočet
+    trigger: "NFR (výkon, dostupnost) jsou agresivní (99.99% uptime, sub-100ms latence pro globální uživatele) bez odpovídajícího rozpočtu na infra."
+    probability: M
+    impact: H
+    effect_md: "+20 až +50 MD (pokud vůbec dosažitelné)"
+    mitigation:
+      - "Performance testing v rané fázi."
+      - "Otevřená diskuse s klientem o trade-off."
+      - "Architektura přizpůsobená NFR (caching, CDN, multi-region)."
+    owner: Solution Architect
+
+  - id: TECH-LEGACY-DEPENDENCY
+    category: tech
+    title: Závislost na legacy komponentě bez možnosti upgrade
+    trigger: "RFP zmiňuje existující systém, který musí zůstat (např. Oracle Forms, AS/400)."
+    probability: M
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Adapter vrstva mezi novým a legacy."
+      - "Test na legacy kompatibilitu co nejdříve."
+    owner: Backend
+
+  # ============================================================
+  # Team risks
+  # ============================================================
+  - id: TEAM-KEY-PERSON
+    category: team
+    title: Odchod klíčového člověka týmu
+    trigger: "Typicky high-risk projekty > 3 měsíce."
+    probability: L
+    impact: H
+    effect_md: "+10 až +30 MD"
+    mitigation:
+      - "Bus factor > 1 (knowledge sharing, pair programming)."
+      - "Dokumentace architecture decision records."
+    owner: Tech Lead
+
+  - id: TEAM-SENIORITY-MIX
+    category: team
+    title: Nerealistický mix juniorů/seniorů pro daný scope
+    trigger: "Komplexní scope (integrace, performance, security) + tým s < 30 % seniorů."
+    probability: M
+    impact: M
+    effect_md: "+10 až +20 MD"
+    mitigation:
+      - "Code review gate."
+      - "Senior mentoring hours vyhrazené v harmonogramu."
+    owner: Tech Lead
+
+  # ============================================================
+  # Client risks
+  # ============================================================
+  - id: CLIENT-SLOW-RESPONSE
+    category: client
+    title: Pomalé odpovědi klienta na dotazy a schválení
+    trigger: "Veřejný sektor, velká korporace, multi-stakeholder."
+    probability: H
+    impact: M
+    effect_md: "+5 až +15 MD (idle time týmu)"
+    mitigation:
+      - "Smluvní SLA na odpověď (např. 3 pracovní dny)."
+      - "Weekly checkpoint s eskalací."
+      - "Paralelní backlog práce, která neblokuje."
+    owner: PM
+
+  - id: CLIENT-MULTI-STAKEHOLDER
+    category: client
+    title: Více stakeholderů s protichůdnými požadavky
+    trigger: "RFP přichází z korporace / sdružení / konsorcia."
+    probability: M
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Single point of contact na straně klienta."
+      - "Decision log + eskalační matice."
+    owner: PM
+
+  - id: CLIENT-CHANGE-PERSON
+    category: client
+    title: Změna klíčové osoby na straně klienta během projektu
+    trigger: "Dlouhý projekt (6+ měsíců) / veřejný sektor / reorganizace."
+    probability: L
+    impact: M
+    effect_md: "+5 až +10 MD"
+    mitigation:
+      - "Průběžná dokumentace rozhodnutí."
+      - "Onboarding protokol pro nové stakeholdery."
+    owner: PM
+
+  # ============================================================
+  # Compliance / regulace
+  # ============================================================
+  - id: COMPL-GDPR
+    category: compliance
+    title: GDPR compliance bez detailu v RFP
+    trigger: "Systém zpracovává osobní údaje, RFP nemá sekci o ochraně dat / DPIA."
+    probability: H
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "Workshop s DPO klienta (fáze 1)."
+      - "Data flow diagram + privacy by design review."
+      - "Právo na výmaz + export v architektuře."
+    owner: Solution Architect + klient DPO
+
+  - id: COMPL-EGOV
+    category: compliance
+    title: Interoperabilita s eGovernment (CZ)
+    trigger: "Klient = veřejná správa."
+    probability: H
+    impact: H
+    effect_md: "+15 až +40 MD"
+    mitigation:
+      - "Integrace se ISDS, ISZR, ROB, RPP."
+      - "Konzultace s DIA (Digitální a informační agentura)."
+    owner: Solution Architect
+
+  - id: COMPL-ISVS
+    category: compliance
+    title: Povinnost registrace jako ISVS
+    trigger: "Systém veřejné správy zpracovávající osobní údaje občanů."
+    probability: M
+    impact: L
+    effect_md: "+3 až +8 MD"
+    mitigation:
+      - "Registrace ISVS při nasazení."
+    owner: PM + klient
+
+  - id: COMPL-KYBER-NIS2
+    category: compliance
+    title: Kybernetický zákon / NIS2
+    trigger: "Významný subjekt kritické infrastruktury (energetika, finance, zdraví, VS)."
+    probability: H
+    impact: H
+    effect_md: "+15 až +40 MD"
+    mitigation:
+      - "Security by design + pravidelný audit."
+      - "Incident response plán + reporting NÚKIB."
+      - "Zavedení ISMS procesů."
+    owner: Security + klient CISO
+
+  - id: COMPL-ACCESSIBILITY
+    category: compliance
+    title: Evropský akt o přístupnosti (EAA, od 28.6.2025)
+    trigger: "Web/app pro spotřebitele komerční."
+    probability: H
+    impact: M
+    effect_md: "+5 až +15 MD"
+    mitigation:
+      - "WCAG 2.1 AA od začátku (ne až na konci)."
+      - "Accessibility audit + uživatelské testy s handicapovanými."
+    owner: Frontend + Design
+
+  - id: COMPL-DORA
+    category: compliance
+    title: DORA (Digital Operational Resilience Act, od 2025)
+    trigger: "Klient = finanční instituce pod dohledem ČNB."
+    probability: H
+    impact: H
+    effect_md: "+20 až +50 MD"
+    mitigation:
+      - "ICT risk management framework."
+      - "Incident reporting + testing (TLPT)."
+      - "Third-party risk management (pro cloud / SaaS)."
+    owner: Solution Architect + klient compliance
+
+  - id: COMPL-CNB
+    category: compliance
+    title: Reporting a dohled ČNB
+    trigger: "Klient = banka/pojišťovna."
+    probability: H
+    impact: M
+    effect_md: "+10 až +25 MD"
+    mitigation:
+      - "Standardizované reporty per ČNB požadavek."
+      - "Auditovatelnost všech změn."
+    owner: Backend + klient compliance
+
+  - id: COMPL-UZIS
+    category: compliance
+    title: Reporting ÚZIS (zdravotnictví)
+    trigger: "Klient = poskytovatel zdravotní péče."
+    probability: H
+    impact: M
+    effect_md: "+10 až +25 MD"
+    mitigation:
+      - "Použití standardů NIX-ZD, DASTA."
+      - "Konzultace s ÚZIS."
+    owner: Solution Architect
+
+  # ============================================================
+  # Timeline
+  # ============================================================
+  - id: TIME-FIXED-DEADLINE
+    category: timeline
+    title: Fixní deadline + fixní scope + fixní cena
+    trigger: "RFP má tvrdé datum (zákonná povinnost, event, konec roku)."
+    probability: H
+    impact: H
+    effect_md: "Nelze absorbovat v MD — scope musí dát prostor."
+    mitigation:
+      - "Tri-partite tradeoff workshop (scope × cena × čas)."
+      - "MVP first + iterace po deadlinu."
+    owner: PM + klient
+
+  - id: TIME-HOLIDAYS-GAP
+    category: timeline
+    title: Významná pauza kvůli svátkům / prázdninám
+    trigger: "Projekt zasahuje do prosinec-leden nebo červenec-srpen."
+    probability: M
+    impact: L
+    effect_md: "+3 až +8 MD"
+    mitigation:
+      - "Plánování kritických milníků mimo dovolené."
+      - "Explicitní kalendář v harmonogramu."
+    owner: PM
+
+  # ============================================================
+  # Data
+  # ============================================================
+  - id: DATA-MIGRATION-UNKNOWN
+    category: data
+    title: Kvalita legacy dat neznámá
+    trigger: "Projekt zahrnuje migraci dat; RFP nepopisuje stav dat."
+    probability: H
+    impact: M
+    effect_md: "+10 až +30 MD"
+    mitigation:
+      - "Data profiling v první fázi (sample + analýza)."
+      - "Reconciliation proces + manuální intervence buffer."
+    owner: Backend (data engineer)
+
+  - id: DATA-PII-TESTS
+    category: data
+    title: PII v testovacích prostředích
+    trigger: "Produkční data potřebná pro testy, klient neumí anonymizovat."
+    probability: M
+    impact: M
+    effect_md: "+5 až +10 MD"
+    mitigation:
+      - "Implementace anonymization / faker pipeline."
+      - "DPIA pro testing prostředí."
+    owner: DevOps + Security
+
+  # ============================================================
+  # Legal / vendor
+  # ============================================================
+  - id: LEGAL-ZVZ
+    category: legal
+    title: Zákon o zadávání veřejných zakázek (ZZVZ)
+    trigger: "Klient = veřejný zadavatel."
+    probability: H
+    impact: M
+    effect_md: "+5 až +15 MD (režie, nikoli přímá práce)"
+    mitigation:
+      - "Change request přes dodatky (není flex)."
+      - "Striktní dokumentace každé změny."
+    owner: PM + právní
+
+  - id: LEGAL-IP-OWNERSHIP
+    category: legal
+    title: Nejasné vlastnictví IP (kód, design, data)
+    trigger: "RFP neřeší IP explicitně."
+    probability: M
+    impact: L
+    effect_md: "nefinanční / smluvní riziko"
+    mitigation:
+      - "Explicitní IP klauzule v SOW."
+    owner: Legal
+
+  - id: VENDOR-LOCK-IN
+    category: vendor
+    title: Cloud / SaaS lock-in
+    trigger: "RFP předepisuje konkrétní cloud (AWS/Azure/GCP) / SaaS."
+    probability: L
+    impact: M
+    effect_md: "Ne krátkodobé, ale exit cost"
+    mitigation:
+      - "IaC umožňující migraci."
+      - "Abstrakce nad cloud-specific API."
+    owner: Solution Architect
+
+  - id: VENDOR-PAYMENT-GATEWAY
+    category: vendor
+    title: Platební brána — změna pricing / podmínek
+    trigger: "Projekt obsahuje platby přes GoPay/ComGate/Stripe."
+    probability: L
+    impact: M
+    effect_md: "+3 až +8 MD (migrace na alternativní bránu)"
+    mitigation:
+      - "Abstrakce payment gateway (portable)."
+      - "Podpora alespoň 2 bran v architektuře."
+    owner: Backend
