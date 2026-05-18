@@ -16,7 +16,7 @@ mkdir -p "$SKILLS_DIR"
 mkdir -p "$COMMANDS_DIR"
 
 # --- Agents ---
-AGENT_FILES=$(find "$SCRIPT_DIR/agents" -name "*.md" 2>/dev/null)
+AGENT_FILES=$(find "$SCRIPT_DIR/agents" -name "*.md" -not -path "*/.claude/*" -not -path "*/worktrees/*" 2>/dev/null)
 AGENT_COUNT=$(echo "$AGENT_FILES" | grep -c "." || true)
 
 if [ "$AGENT_COUNT" -eq 0 ]; then
