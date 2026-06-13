@@ -41,7 +41,8 @@ Primary users:
 Success looks like:
 
 - One install command configures selected harnesses.
-- Every harness gets equivalent workflows.
+- Every harness gets equivalent primary workflows and subagent roles, using the
+  closest native mechanism each harness supports.
 - Agents produce and consume the same spec anchors.
 - Contracts use machine-readable formats, not prose.
 - Context packs stay small and precise.
@@ -87,7 +88,7 @@ workflows/
 agents/                 # OpenCode adapter
 codex/skills/            # Codex adapter
 claude/skills/           # Claude Code adapter
-claude/agents/           # Claude Code subagents where useful
+claude/agents/           # Claude Code subagents for parity
 install.sh               # parameterized multi-harness installer
 ```
 
@@ -95,9 +96,25 @@ The core defines intent, artifacts, quality gates, and anchor semantics. Adapter
 translate that intent into each harness's native mechanics:
 
 - OpenCode: primary agents, subagents, permissions, optional commands.
-- Codex: `SKILL.md` workflow skills and `AGENTS-sdlc.md`.
-- Claude Code: `SKILL.md` workflow skills, optional subagents, and a
-  `CLAUDE-sdlc.md` instruction file or snippet.
+- Codex: `SKILL.md` workflow skills, phase/subagent-equivalent skills for every
+  shared role, and `AGENTS-sdlc.md`.
+- Claude Code: `SKILL.md` workflow skills, subagents, and a `CLAUDE-sdlc.md`
+  instruction file or snippet.
+
+## Harness Parity
+
+The experience should be as similar as each harness allows:
+
+| Role | OpenCode | Codex | Claude Code |
+| --- | --- | --- | --- |
+| Primary workflows | primary agents | workflow skills | workflow skills |
+| Subagents / phases | subagents | phase skills or focused task prompts for every shared role | subagents |
+| Shared repo guidance | `AGENTS.md` | `AGENTS-sdlc.md` | `CLAUDE-sdlc.md` |
+| Task memory | Beads preferred, fallback inline | Beads preferred, fallback inline | Beads preferred, fallback inline |
+| Review gates | native questions + optional Plannotator | native prompts + optional Plannotator | plan mode + optional Plannotator |
+
+Parity means the same role names, artifact anchors, approval gates, and evidence
+rules everywhere. It does not require identical tool mechanics.
 
 ## Installer UX
 
@@ -117,8 +134,9 @@ Which harnesses should be installed?
 3. Claude Code
 4. All
 
-Install Plannotator review hooks? [y/N]
-Install spec-driven templates? [Y/n]
+Offer Plannotator setup through its official installer/plugin? [y/N]
+Install spec-driven templates into this repo? [y/N]
+Initialize Beads task memory in this repo? [y/N]
 Overwrite existing SDLC files? [y/N]
 ```
 
@@ -128,14 +146,19 @@ Non-interactive:
 ./install.sh --harness opencode
 ./install.sh --harness codex,claude
 ./install.sh --harness all --with-plannotator --with-spec-templates
+./install.sh --harness all --with-spec-templates --init-beads
 ./install.sh --harness all --dry-run
 ```
 
 The script should also support:
 
 - `--force` to overwrite existing SDLC-managed files.
-- `--no-plannotator` to skip hooks explicitly.
+- `--with-plannotator` to delegate setup to the official Plannotator installer
+  or plugin instructions.
+- `--no-plannotator` to skip Plannotator setup guidance explicitly.
 - `--no-spec-templates` to install agents only.
+- `--init-beads` to run `bd init` for the current repo when templates are
+  installed.
 - `--print-targets` to show resolved install paths.
 
 ## Installed Outputs
@@ -143,7 +166,7 @@ The script should also support:
 OpenCode:
 
 ```text
-~/.config/opencode/agents/*.md
+~/.config/opencode/agents/*.md       # primary agents and subagents
 ~/.config/opencode/skills/*
 ~/.config/opencode/commands/*        # optional adapter commands only
 ~/.config/opencode/AGENTS.md
@@ -154,6 +177,7 @@ Codex:
 ```text
 ~/.codex/skills/sdlc-*/SKILL.md
 ~/.codex/skills/spec-*/SKILL.md
+~/.codex/skills/*/SKILL.md           # phase/subagent-equivalent skills
 ~/.codex/AGENTS-sdlc.md
 ```
 
@@ -162,7 +186,7 @@ Claude Code:
 ```text
 ~/.claude/skills/sdlc-*/SKILL.md
 ~/.claude/skills/spec-*/SKILL.md
-~/.claude/agents/*.md                # only for workflows that need subagents
+~/.claude/agents/*.md                # subagents matching OpenCode roles
 ~/.claude/CLAUDE-sdlc.md             # installable instruction snippet
 ```
 
@@ -180,11 +204,11 @@ docs/specs/
   index.yaml
 
   product/
+    PRD-*.md
     REQ-*.md
 
   acceptance/
     AC-*.feature
-    AC-*.test.ts
 
   architecture/
     architecture.dsl
@@ -202,9 +226,6 @@ docs/specs/
       schema.sql
       migrations/
 
-  tasks/
-    TASK-*.yaml
-
   evidence/
     TEST-*.yaml
 ```
@@ -213,6 +234,19 @@ docs/specs/
 models, component boundaries, runtime/data flow, deployment shape, NFRs,
 security/privacy constraints, and ADRs. It does not contain API schemas, event
 schemas, or database contracts.
+
+Tests live in the product codebase, not in `docs/specs/`. Acceptance artifacts
+under `docs/specs/acceptance/` describe behavior in a reviewable form such as
+Gherkin. The anchor registry points to executable test files in their native
+project locations, for example `apps/api/tests/auth-login.test.ts`.
+
+PRDs are first-class product artifacts. `PRD-*.md` files hold the narrative
+product decision context, while `REQ-*` anchors are the granular requirements
+that tasks, contracts, acceptance criteria, and ADRs reference.
+
+Implementation tasks are stored in Beads when Beads is available. YAML task
+artifacts are only a fallback/export format for environments where Beads is not
+initialized.
 
 ## Anchor Registry
 
@@ -226,9 +260,16 @@ anchors:
   REQ-001:
     title: Login with email
     file: product/auth.md
+    prd: PRD-001
     acceptance: [AC-001]
     contracts: [API-001]
     decisions: [ADR-0001]
+    tasks: [bd-123]
+    status: approved
+
+  PRD-001:
+    title: Authentication MVP
+    file: product/PRD-authentication.md
     status: approved
 
   API-001:
@@ -240,21 +281,28 @@ anchors:
   AC-001:
     title: Successful email login
     file: acceptance/auth-login.feature
+    test_refs:
+      - apps/api/tests/auth-login.test.ts
     status: approved
 ```
 
 Anchor types:
 
-- `REQ-*`: product requirement.
-- `AC-*`: acceptance criterion or executable acceptance test.
+- `PRD-*`: product requirements document.
+- `REQ-*`: granular product requirement.
+- `AC-*`: acceptance criterion with optional references to executable tests in
+  the codebase.
 - `API-*`: OpenAPI pointer.
 - `EVT-*`: AsyncAPI or event schema pointer.
 - `GQL-*`: GraphQL schema field or operation.
 - `PROTO-*`: protobuf service/message.
 - `DB-*`: database schema or migration anchor.
 - `ADR-*`: architecture decision.
-- `TASK-*`: implementation task.
+- `TASK-*`: fallback/exported task artifact when Beads is unavailable.
 - `TEST-*`: verification evidence.
+
+When Beads is available, task anchors should point to Beads IDs such as `bd-123`
+instead of `TASK-*.yaml` files.
 
 ## Token Efficiency Design
 
@@ -267,15 +315,18 @@ Context pack rule:
 2. Resolve only anchors referenced by the current task or request.
 3. For machine contracts, load only the referenced pointer or schema object.
 4. Load only linked ADRs, not every ADR.
-5. Load only relevant acceptance files/tests.
+5. Load only relevant acceptance files and referenced code test files.
 6. Summarize the context pack before planning or implementation.
 
 Generated task briefs should include:
 
 ```yaml
-id: TASK-001
+id: bd-123
 title: Implement email login endpoint
+task_backend: beads
+beads_id: bd-123
 anchors:
+  prd: [PRD-001]
   requirements: [REQ-001]
   acceptance: [AC-001]
   contracts: [API-001, DB-001]
@@ -294,22 +345,24 @@ verification:
 Flow:
 
 1. Discovery.
-2. Product requirement anchors.
-3. Acceptance criteria.
-4. Optional Product Lab/prototype for user-facing work.
-5. Architecture notes and ADRs.
-6. Machine-readable contracts.
-7. Tasks.
-8. Evidence.
+2. PRD.
+3. Product requirement anchors.
+4. Acceptance criteria.
+5. Optional Product Lab/prototype for user-facing work.
+6. Architecture notes and ADRs.
+7. Machine-readable contracts.
+8. Beads tasks or fallback task exports.
+9. Evidence.
 
 Minimal artifacts:
 
 - `product/REQ-*.md`
+- `product/PRD-*.md`
 - `acceptance/AC-*.feature`
 - `architecture/architecture.dsl`
 - `architecture/decisions/ADR-*.md`
 - relevant files under `contracts/`
-- `tasks/TASK-*.yaml`
+- Beads tasks, or `TASK-*.yaml` fallback exports when Beads is unavailable
 
 ### Customer Or Jira Requirement
 
@@ -350,8 +403,10 @@ Plannotator is optional and gate-based:
 - Product Lab artifact review when generated.
 - Code diff review before completion.
 
-It is not the primary user interface. The installer can configure hooks, but the
-agents must still work without Plannotator.
+It is not the primary user interface. Hook setup should be delegated to the
+official Plannotator installer or plugin instructions. This installer may detect
+and report Plannotator status, but it should not reimplement Plannotator setup.
+The agents must work without Plannotator.
 
 ## Information Architecture
 
@@ -374,8 +429,9 @@ AGENTS.md               # OpenCode/root guidance
 Installer prompts:
 
 - "Which harnesses should be installed?"
-- "Install Plannotator review hooks? You can still use the agents without it."
+- "Offer Plannotator setup through its official installer/plugin? You can still use the agents without it."
 - "Install SDD templates into this repo?"
+- "Initialize Beads task memory in this repo?"
 - "Existing SDLC files found. Overwrite managed files only?"
 - "Dry run complete. No files changed."
 
@@ -384,13 +440,14 @@ Agent checkpoint copy:
 - "Review these anchors before implementation."
 - "This task references no acceptance criteria yet. Add one or continue with lower confidence?"
 - "The OpenAPI contract changed. Should I update generated tests now?"
-- "Beads is unavailable, so I created inline task artifacts instead."
+- "Beads is unavailable, so I created fallback task artifacts instead."
 
 Error copy:
 
 - "I cannot find a spec index at `docs/specs/index.yaml`. I can create the template or continue with a one-off plan."
 - "This contract is Markdown, not a machine-readable schema. I need OpenAPI, AsyncAPI, GraphQL, protobuf, JSON Schema, or SQL to treat it as a contract."
 - "The requested anchor exists in the index but the target file is missing."
+- "This acceptance criterion references a test file that does not exist in the codebase."
 
 ## Accessibility And Inclusivity
 
@@ -400,6 +457,8 @@ Error copy:
 - Plannotator is optional; review must remain possible in terminal/editor.
 - Use stable IDs and file paths so users with different tools can inspect the
   same artifacts.
+- Subagent role names and handoff summaries should stay consistent across
+  OpenCode, Codex, and Claude Code.
 
 ## Empty, Loading, And Success States
 
@@ -420,6 +479,7 @@ Success states:
 
 - "Installed OpenCode, Codex, and Claude Code adapters."
 - "Spec templates created under `docs/specs/`."
+- "Beads initialized for task memory."
 - "Plannotator hook setup skipped."
 - "Next: open your harness and invoke the native SDLC workflow."
 
@@ -433,6 +493,9 @@ Success states:
 - Validate every generated YAML/JSON file.
 - Validate shell syntax for installer.
 - Detect missing machine-readable contract files before task generation.
+- Detect whether Beads is available before creating implementation tasks.
+- Validate that acceptance criteria point to real code test files before claiming
+  executable coverage.
 
 ## Prioritized Changes
 
@@ -440,13 +503,17 @@ Success states:
 2. Replace split installers with one parameterized `install.sh`.
 3. Add Claude Code adapter tree.
 4. Add shared `workflows/core/` source files.
-5. Add SDD template structure under `docs/specs/`.
+5. Add SDD template structure under `docs/specs/`, gated behind
+   `--with-spec-templates`.
 6. Update OpenCode and Codex adapters to reference shared SDD anchors.
 7. Add token-efficient context-pack rules to `spec`, `sdlc-build`, and debugger
    workflows.
-8. Keep Plannotator integration optional and documented.
-9. Add installer tests and syntax checks.
-10. Add README quick start for all three harnesses.
+8. Add Claude Code subagents and Codex phase skills so role names are consistent
+   across harnesses.
+9. Make Beads the preferred task backend with YAML fallback/export only.
+10. Delegate Plannotator hook setup to official Plannotator instructions.
+11. Add installer tests and syntax checks.
+12. Add README quick start for all three harnesses.
 
 ## Usability Test Plan
 
@@ -470,25 +537,32 @@ Task 3: Start a Jira/customer requirement workflow in each harness.
 Task 4: Update an API contract.
 
 - Success: agent writes or references `contracts/openapi.yaml`, updates
-  `index.yaml`, and creates tasks that point to exact OpenAPI pointers.
+  `index.yaml`, and creates Beads tasks that point to exact OpenAPI pointers.
 
 Task 5: Debug a bug.
 
 - Success: agent reproduces, records root cause evidence, adds a regression
-  acceptance/test anchor, and avoids the full product pipeline.
+  acceptance anchor, links it to a code test file, and avoids the full product
+  pipeline.
 
-## Open Questions
+## Resolved Review Decisions
 
-- Should Claude Code receive only skills, or also dedicated subagents for
-  builder/reviewer/scanner roles?
-- Should `docs/specs/index.yaml` be created in this repo by default, or only when
-  `--with-spec-templates` is selected?
-- Should Plannotator hook setup be delegated to the official installer, with this
-  repo only documenting how to enable it?
+- Product planning keeps PRDs. PRDs carry narrative product context; REQ anchors
+  carry granular traceability.
+- Tests live in code. `docs/specs/acceptance/` stores acceptance descriptions and
+  points to executable tests in project test directories.
+- Beads is the preferred task backend. YAML task artifacts exist only as fallback
+  or export when Beads is unavailable.
+- Claude Code should receive subagents matching OpenCode roles where the harness
+  supports them. Codex should receive phase/subagent-equivalent skills.
+- `docs/specs/index.yaml` and templates are created only with
+  `--with-spec-templates`.
+- Plannotator setup is delegated to the official Plannotator installer or plugin
+  instructions.
 
 ## Design Decision
 
 Proceed with one parameterized installer and shared SDD core. Runtime workflows
 remain native to OpenCode, Codex, and Claude Code. Contracts are machine-readable
-formats. Markdown remains for requirements, ADRs, architecture notes, tasks, and
-evidence summaries.
+formats. Markdown remains for PRDs, requirements, ADRs, architecture notes,
+acceptance descriptions, and evidence summaries.
