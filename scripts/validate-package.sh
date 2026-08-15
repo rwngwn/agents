@@ -34,33 +34,33 @@ prompt_count="$(find .apm/prompts -type f -name '*.prompt.md' | wc -l | tr -d ' 
 [[ "$agent_count" == "22" ]] || fail "expected 22 agents, found $agent_count"
 [[ "$prompt_count" == "4" ]] || fail "expected 4 prompts, found $prompt_count"
 
-if find .apm/agents -mindepth 2 -type f -name '*.agent.md' | rg -q .; then
+if find .apm/agents -mindepth 2 -type f -name '*.agent.md' | grep -q .; then
   fail "agent files must be direct children of .apm/agents so apm pack includes them"
 fi
 
 while IFS= read -r path; do
   frontmatter="$(sed -n '2,/^---$/p' "$path")"
-  rg -q '^name: .+' <<<"$frontmatter" || fail "$path has no name"
-  rg -q '^description: .+' <<<"$frontmatter" || fail "$path has no description"
+  grep -Eq '^name: .+' <<<"$frontmatter" || fail "$path has no name"
+  grep -Eq '^description: .+' <<<"$frontmatter" || fail "$path has no description"
 done < <(find .apm/agents -type f -name '*.agent.md' | sort)
 
-if rg -n '^(model|temperature|tools):' .apm/agents; then
+if grep -R -n -E --include='*.agent.md' '^(model|temperature|tools):' .apm/agents; then
   fail "agent metadata contains a host-specific model, temperature, or tools field"
 fi
 
-if rg -n 'github-copilot/' .apm; then
+if grep -R -n 'github-copilot/' .apm; then
   fail "package contains a GitHub Copilot model slug"
 fi
 
-if rg -n '^(agent|subtask|model):' .apm/prompts; then
+if grep -R -n -E --include='*.prompt.md' '^(agent|subtask|model):' .apm/prompts; then
   fail "prompt metadata contains a non-portable field"
 fi
 
-if rg -n '\$ARGUMENTS' .apm/prompts; then
+if grep -R -n --include='*.prompt.md' '\$ARGUMENTS' .apm/prompts; then
   fail "prompt uses a host-specific argument placeholder"
 fi
 
-if find .apm -type f -name '*security-pre-reviewer*' | rg -q .; then
+if find .apm -type f -name '*security-pre-reviewer*' | grep -q .; then
   fail "deprecated security-pre-reviewer is still packaged"
 fi
 
