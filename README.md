@@ -87,6 +87,9 @@ Supporting agents:
 | Security | `threat-modeler`, `secrets-scanner`, `code-vuln-scanner`, `deps-scanner`, `config-scanner` |
 | Release and maintenance | `release-verifier`, `spec-archaeologist`, `spec-drift-detector`, `tech-writer` |
 
+See the [complete agent inventory](docs/agent-inventory.md) for all 25 names,
+visibility, lifecycle stages, invocation guidance, and handoffs.
+
 The deprecated `security-pre-reviewer` is intentionally not packaged. Its
 security and quality gates are embedded in `architect`.
 

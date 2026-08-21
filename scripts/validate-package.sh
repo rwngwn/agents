@@ -15,6 +15,7 @@ fail() {
 [[ -f .apm/agents/change-spec-writer.agent.md ]] || fail "change-spec-writer is missing"
 [[ -f .apm/agents/threat-modeler.agent.md ]] || fail "threat-modeler is missing"
 [[ -f .apm/agents/release-verifier.agent.md ]] || fail "release-verifier is missing"
+[[ -f docs/agent-inventory.md ]] || fail "agent inventory is missing"
 
 python3 - <<'PY'
 from pathlib import Path
@@ -46,6 +47,21 @@ for path in agent_paths:
             f"validation error: duplicate agent name {name!r} in {agent_names[name]} and {path}"
         )
     agent_names[name] = path
+
+inventory_path = Path("docs/agent-inventory.md")
+inventory_text = inventory_path.read_text(encoding="utf-8")
+inventory_names = re.findall(
+    r"\]\(\.\./\.apm/agents/([a-z0-9-]+)\.agent\.md\)", inventory_text
+)
+if len(inventory_names) != len(set(inventory_names)):
+    raise SystemExit("validation error: agent inventory contains duplicate source links")
+missing_inventory = sorted(set(agent_names) - set(inventory_names))
+extra_inventory = sorted(set(inventory_names) - set(agent_names))
+if missing_inventory or extra_inventory:
+    raise SystemExit(
+        "validation error: agent inventory drift: "
+        f"missing={missing_inventory}, extra={extra_inventory}"
+    )
 
 host_builtin_agents = {"explore"}
 for path in agent_paths:
