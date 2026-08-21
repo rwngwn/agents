@@ -1,223 +1,116 @@
-# SDLC Agent System for OpenCode
+# SDLC Agent System
 
-Complete set of AI agents covering the Software Development Lifecycle -- from
-raw idea to security audit.
+This repository is the canonical Microsoft Agent Package Manager (APM) source
+for an SDLC workflow that runs in Claude Code and OpenCode.
+
+## Repository contract
+
+- Author package primitives only under `.apm/`.
+- Agent files live directly under `.apm/agents/` and end in `.agent.md`. Keep
+  this directory flat so both installation and plugin packing include them.
+- Prompt files live under `.apm/prompts/` and end in `.prompt.md`.
+- Skills use `.apm/skills/<name>/SKILL.md`.
+- Shared instructions use `.apm/instructions/*.instructions.md`.
+- Do not commit deployed `.claude/` or `.opencode/` output to this package repo.
+- Do not reintroduce provider-specific model slugs into shared agent metadata.
+- Do not add a shared `tools` field: Claude Code and OpenCode require different
+  YAML shapes. OpenCode permission boundaries belong in `permission`; Claude
+  permissions belong in the consuming project's host configuration.
+
+Run all package checks before claiming a change is complete:
+
+```bash
+bash scripts/validate-package.sh
+apm compile --validate
+apm compile --dry-run --target claude,opencode
+apm pack --dry-run
+```
 
 ## Architecture
 
-The system consists of 21 custom agents organized into 5 primary agents and 16
-subagents. Users press **Tab** to cycle through the 5 primary agents.
-Subagents are invoked automatically by orchestrators via the Task tool, or manually
-via `@mention`.
+There are 25 active agents: five primary entry points and 20 supporting agents.
+Orchestrators delegate using the host's native subagent mechanism (`Agent` in
+Claude Code, `Task` in OpenCode).
 
-**Note:** OpenCode's built-in `plan` (read-only) and `build` (full access) agents
-are preserved -- the custom agents use `sdlc-plan` and `sdlc-build` to avoid
-overriding them.
+### Primary agents
 
-Agents communicate via Beads (`bd`) -- a local AI-optimized issue tracker serving
-as shared memory for the entire system.
+| Agent | Purpose |
+|---|---|
+| `sdlc-plan` | Product intent → business slice → EARS/BDD → design/security → tasks |
+| `sdlc-build` | Approved change → QA/TDD briefs → workers/reviewers → evidence |
+| `debugger` | Logs/telemetry → root cause → traceable regression fix |
+| `security-reviewer` | Threat-model context → parallel scan → remediation changes |
+| `tech-storyteller` | Technical narrative and marketing content |
 
-### Universal Principle
+### Planning agents
 
-**Evidence before claims.** No agent may claim work is complete, fixed, passing,
-or ready without running the relevant verification command and confirming output
-in the same message. "Should work" is not verification.
+| Agent | Purpose |
+|---|---|
+| `discovery` | Users, personas, competitors, journeys, and evidence |
+| `strategist` | Strategic options, OKRs, PR/FAQ, and hypothesis |
+| `pm-writer` | PRDs, feature specs, and product briefs |
+| `change-spec-writer` | Business slices, EARS requirements, BDD, and evidence anchors |
+| `system-architect` | Change design and canonical architecture/ADR/domain curation |
 
-### Key Architecture Decision: Architect as Planner, sdlc-build as Executor
+### Delivery agents
 
-The architect agent is a **design-time planner** -- it prepares enriched Task Briefs
-(with embedded security and quality constraints) and writes them to Beads, then exits.
+| Agent | Purpose |
+|---|---|
+| `spec` | Codebase analysis and implementation planning |
+| `spec-tasks` | Mechanical Beads task creation after approval |
+| `qa-strategist` | Test strategy, edge cases, and regression coverage |
+| `architect` | Enriched Task Briefs with embedded security and quality gates |
+| `builder-worker` | Implementation and verification from an approved brief |
+| `builder-reviewer` | Independent correctness, security, and spec review |
 
-The `sdlc-build` agent is the **runtime executor** -- it reads Task Briefs from Beads
-and directly orchestrates parallel builder-worker/reviewer pipelines. This separation
-eliminates the bottleneck of having architect manage worker/reviewer orchestration,
-enabling better parallelism and reducing stalling.
+`architect` is a design-time planner. It writes enriched briefs and exits.
+`sdlc-build` is the runtime executor that dispatches worker/reviewer pipelines.
+The old `security-pre-reviewer` is deprecated and removed; its checks are
+embedded in `architect`.
 
-The `security-pre-reviewer` subagent has been **deprecated** -- its CWE checklist
-logic is now embedded directly in the architect as a Security Skill, eliminating
-one round-trip per Task Brief.
+### Security agents
 
----
+`security-reviewer` dispatches these four scanners in parallel:
 
-## Primary Agents (Tab-cycleable)
+| Agent | Purpose |
+|---|---|
+| `secrets-scanner` | Credentials, tokens, keys, and suspicious secrets |
+| `code-vuln-scanner` | OWASP, authorization, injection, crypto, and logic flaws |
+| `deps-scanner` | CVEs, package age, integrity, and supply-chain risk |
+| `config-scanner` | Headers, CORS, cookies, TLS, debug, and infrastructure config |
 
-| File | Agent | Purpose |
-|------|-------|---------|
-| `sdlc-plan.md` | **sdlc-plan** | Idea -> discovery -> strategy -> PRD -> tech design -> Beads tasks -> handoff to sdlc-build |
-| `sdlc-build.md` | **sdlc-build** | Takes Beads epic or plan -> optional QA -> architect (brief prep) -> parallel workers/reviewers |
-| `debugger.md` | **debugger** | Bug investigation -> root cause analysis -> direct fix via builder-worker/reviewer (small) or spec (fix mode) -> sdlc-build (large) |
-| `security-reviewer.md` | **security-reviewer** | 4 parallel scanners -> consolidated report -> remediation tasks |
-| `tech-storyteller.md` | **tech-storyteller** | Blog posts, explainers, case studies, launch narratives |
+`threat-modeler` performs the separate design-time workflow for assets, flows,
+trust boundaries, STRIDE threats, controls, validation, and residual-risk ownership.
 
-## Subagents
+### Standalone agents
 
-### sdlc-plan subagents (hidden)
+| Agent | Purpose |
+|---|---|
+| `spec-archaeologist` | Reconstruct PRDs, designs, ADRs, and contracts from code |
+| `spec-drift-detector` | Compare living specifications with current code |
+| `tech-writer` | API docs, READMEs, migrations, and changelogs |
+| `release-verifier` | Deployment identity, production scenarios, telemetry, rollback, and release evidence |
 
-| File | Agent | Invoked by | Purpose |
-|------|-------|-----------|---------|
-| `discovery.md` | discovery | sdlc-plan | Market research, user research, personas, competitive analysis |
-| `strategist.md` | strategist | sdlc-plan | Product strategy, OKRs, PR/FAQ, founding hypothesis |
-| `pm-writer.md` | pm-writer | sdlc-plan | PRDs, feature specs, product briefs. Calls spec for codebase analysis |
-| `system-architect.md` | system-architect | sdlc-plan | Tech design, DB schema, API design, application architecture |
+## Universal behavior
 
-### sdlc-build subagents (hidden)
+1. **Evidence before claims.** Run the relevant verification and report its
+   observed output before declaring completion.
+2. **Human-in-the-loop.** Stop at every marked approval gate.
+3. **Canonical behavior gate.** Non-trivial changes require an approved
+   `docs/changes/<issue-id>.md` with EARS requirements and BDD scenarios.
+4. **Self-contained handoffs.** Include the goal, constraints, evidence,
+   expected output, and verification in every delegation.
+5. **Least privilege.** Respect the active agent's role and file boundaries.
+6. **Portable vocabulary.** Say “host subagent delegation tool” and “host
+   interactive question tool” in shared bodies when the native tool names differ.
+7. **Optional Beads.** Mirror tasks when available; the repository change artifact
+   remains canonical. Otherwise continue with Markdown briefs.
+8. **Release evidence.** Merge is not verification. Only observed deployment and
+   production evidence may advance a change to `verified`.
 
-| File | Agent | Invoked by | Purpose |
-|------|-------|-----------|---------|
-| `spec.md` | spec | sdlc-plan, sdlc-build, debugger | Codebase analysis, Shared Context, implementation plan (feature or fix mode) |
-| `spec-tasks.md` | spec-tasks | sdlc-plan, spec | Mechanical Beads task creation from approved plan |
-| `qa-strategist.md` | qa-strategist | sdlc-build | Test strategy, edge case matrices, regression suites |
-| `architect.md` | architect | sdlc-build | Task Brief design with embedded Security + Quality skills, writes enriched briefs to Beads |
-| `builder-worker.md` | builder-worker | sdlc-build | Code implementation per Task Brief |
-| `builder-reviewer.md` | builder-reviewer | sdlc-build | Independent code review of implementation |
+## Prompt contract
 
-### security subagents (hidden)
-
-| File | Agent | Invoked by | Purpose |
-|------|-------|-----------|---------|
-| `security-pre-reviewer.md` | ~~security-pre-reviewer~~ | ~~architect~~ | **DEPRECATED** -- logic merged into architect's Security Skill |
-| `secrets-scanner.md` | secrets-scanner | security-reviewer | Hardcoded secrets, API keys, tokens, credentials |
-| `code-vuln-scanner.md` | code-vuln-scanner | security-reviewer | OWASP Top 10, injection, auth flaws, crypto misuse |
-| `deps-scanner.md` | deps-scanner | security-reviewer | CVEs, outdated packages, supply chain risks |
-| `config-scanner.md` | config-scanner | security-reviewer | CORS, CSP, headers, debug mode, TLS config |
-
-### Standalone subagents (visible via @mention)
-
-| File | Agent | Purpose |
-|------|-------|---------|
-| `tech-writer.md` | tech-writer | API docs, README, migration guides, changelogs |
-
----
-
-## Visual Flow
-
-```
-  User (Tab to switch primary agents)
-    |
-    +---> [sdlc-plan] -+-> discovery (personas, journey maps, competitive analysis)
-    |                   |   HIL: approve personas and analysis
-    |                   +-> strategist (strategy, OKRs, PR/FAQ)
-    |                   |   HIL: approve strategy
-    |                   +-> pm-writer -> spec (codebase analysis, implementation plan)
-    |                   |   HIL: approve PRD + plan
-    |                   +-> system-architect (tech design, DB, API)
-    |                   |   HIL: approve tech design
-    |                   +-> spec + spec-tasks (create Beads epic with tasks)
-    |                   +-> handoff: "Switch to sdlc-build, implement epic bd-XX"
-    |
-    +---> [sdlc-build] -+-> (optional) qa-strategist (test strategy, edge cases)
-    |                    +-> spec (codebase analysis, Shared Context, plan) [if needed]
-    |                    |   HIL: approve implementation plan
-    |                    +-> architect (designs enriched Task Briefs → Beads)
-    |                    |     • Security Skill (embedded CWE checklist)
-    |                    |     • Quality Skill (embedded quality gates)
-    |                    |     • writes briefs to Beads, then EXITS
-    |                    +-> sdlc-build reads briefs from Beads
-    |                    +-> parallel pipelines (sdlc-build orchestrates directly):
-    |                         +-> builder-worker (implementation)
-    |                         +-> builder-reviewer (review)
-    |                         +-> builder-worker (fix, max 2x)
-    |                         +-> builder-reviewer (re-review)
-    |
-    +---> [debugger] -> spec (fix mode) -> sdlc-build (implementation)
-    |
-    +---> [security-reviewer] -+-> secrets-scanner
-    |                          +-> code-vuln-scanner    (all 4 in parallel)
-    |                          +-> deps-scanner
-    |                          +-> config-scanner
-    |                          +-> remediation -> sdlc-build
-    |
-    +---> @tech-writer (standalone -- docs, README, changelog)
-    |
-    +---> [tech-storyteller] (primary -- blog posts, case studies)
-```
-
-## Typical Workflows
-
-### A) From idea to shipped product
-
-1. User switches to `sdlc-plan` (Tab) -- "I want to build X"
-   - sdlc-plan orchestrator invokes: discovery -> strategist -> pm-writer -> system-architect
-   - HIL checkpoint after each phase
-   - Creates Beads epic with tasks
-   - Tells user to switch to sdlc-build with epic ID
-2. User switches to `sdlc-build` (Tab) -- "Implement epic bd-XX"
-   - sdlc-build invokes architect (designs briefs with security + quality gates → Beads)
-   - sdlc-build reads enriched briefs from Beads
-   - sdlc-build dispatches parallel worker/reviewer pipelines directly
-3. User switches to `security-reviewer` (Tab) -- "Security audit before merge"
-   - security orchestrator invokes: 4 parallel scanners -> consolidated report -> remediation tasks
-
-### B) Bug fix workflow
-
-1. User switches to `debugger` (Tab) -- "Investigate this bug"
-   - debugger investigates root cause -> calls spec (fix mode) -> sdlc-build implements fix
-   - Optional: qa-strategist for regression suite
-
-### C) Small task (skip planning)
-
-1. User switches to `sdlc-build` (Tab) -- "Add a health check endpoint"
-   - sdlc-build routes to architect (designs mini Task Brief → Beads)
-   - sdlc-build reads brief, dispatches worker -> reviewer -> done
-
-### D) Documentation
-
-1. User types `@tech-writer` -- "Document the API"
-   - tech-writer explores codebase -> produces docs
-2. User types `@tech-storyteller` -- "Write a blog post about the new feature"
-   - tech-storyteller explores codebase -> produces narrative content
-
-## Installation
-
-Run the install script:
-
-```bash
-./install.sh
-```
-
-Or manually copy all agent `.md` files to `~/.config/opencode/agents/`:
-
-```bash
-# From the root of this repo
-cp agents/**/*.md ~/.config/opencode/agents/
-cp AGENTS.md ~/.config/opencode/AGENTS.md
-```
-
-## Beads (optional)
-
-Agents spec, spec-tasks, architect, and sdlc-build use
-[Beads](https://github.com/steveyegge/beads) for reliable task handoff. Beads serves
-as the shared memory between architect (writes enriched briefs) and sdlc-build
-(reads briefs and orchestrates execution).
-
-```bash
-brew install beads
-cd your-project && bd init
-```
-
-## Design Principles
-
-1. **Architect plans, sdlc-build executes** -- architect prepares enriched Task Briefs
-   and writes them to Beads; sdlc-build reads them and orchestrates worker/reviewer
-   pipelines. Clean separation of design-time and run-time.
-2. **Embedded security and quality** -- architect runs CWE and quality checklists
-   internally (no separate security-pre-reviewer subagent), injecting constraints
-   directly into Task Briefs before writing to Beads.
-3. **Subagent verification** -- orchestrators automatically invoke domain agents;
-   the user cannot forget a step
-4. **Least privilege** -- each agent has only the permissions it needs
-5. **Self-contained handoff** -- subagents start with clean context; everything
-   they need is in the prompt
-6. **Human-in-the-Loop** -- key decisions are approved by the human (HIL checkpoints
-   between phases)
-7. **Explicit formats** -- every agent has defined input and output formats
-8. **Consistency** -- all agents use the same structures (P0-P4 priority,
-   severity levels, risk matrices)
-9. **5 primary + 16 subagents** -- users Tab through 5 agents; the rest are
-   invoked automatically or via `@mention`
-10. **No built-in overrides** -- `plan` and `build` are OpenCode defaults; we use
-    `sdlc-plan` and `sdlc-build` to avoid collision
-11. **Separation of concerns** -- each orchestrator has a clear area of responsibility
-12. **Evidence before claims** -- universal verification principle across all agents
-13. **Behaviors embedded, not referenced** -- skill-derived behaviors are baked directly
-    into agent descriptions, not loaded as external dependencies
+APM prompt frontmatter may use only portable keys such as `description`,
+`input`, `allowed-tools`, `model`, and `argument-hint`. This package deliberately
+omits `allowed-tools` and `model` for cross-host compatibility. Reference prompt
+inputs as `${input:name}`; APM rewrites them for each target.

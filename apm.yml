@@ -1,0 +1,13 @@
+name: sdlc-agents
+version: 0.2.0
+description: Portable, traceable AISDLC agents from product intent through production verification for Claude Code and OpenCode.
+author: David Bečvařík
+license: MIT
+targets:
+  - claude
+  - opencode
+dependencies:
+  apm: []
+  mcp: []
+includes: auto
+scripts: {}

@@ -1,0 +1,32 @@
+name: Validate APM package
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/apm-action@v1
+        with:
+          setup-only: true
+
+      - name: Validate repository contract
+        run: bash scripts/validate-package.sh
+
+      - name: Validate APM primitives
+        run: apm compile --validate
+
+      - name: Preview Claude Code and OpenCode placement
+        run: apm compile --dry-run --target claude,opencode
+
+      - name: Preview package bundle
+        run: apm pack --dry-run
