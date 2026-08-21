@@ -1,8 +1,8 @@
 # SDLC agents for Claude Code and OpenCode
 
 An [Agent Package Manager (APM)](https://microsoft.github.io/apm/) package with
-22 agents, four slash commands, and an API security skill for planning,
-implementation, debugging, documentation, and security review.
+25 agents, seven slash commands, and an API security skill for a traceable
+AI-native lifecycle from product intent through production verification.
 
 The package uses one canonical `.apm/` source tree and installs native files for
 both [Claude Code](https://code.claude.com/docs/en/sub-agents) and
@@ -56,36 +56,76 @@ use its agent selector. Slash commands work in both hosts:
 
 | Command | Purpose |
 |---|---|
+| `/change-spec <context>` | Create an approved business-slice artifact with EARS and BDD |
+| `/threat-model <change>` | Model trust boundaries, threats, controls, and residual risk |
 | `/audit-security [scope]` | Run the four security scanners and consolidate findings |
+| `/release-verify <change>` | Record deployment and observed production verification |
 | `/spec-archaeology [options]` | Reverse-engineer specs from an existing codebase |
 | `/spec-drift [scope]` | Compare living specs with the implementation |
 | `/strategist <idea>` | Produce strategic bets, OKRs, a PR/FAQ, and a founding hypothesis |
 
 ## Architecture
 
-The five primary agents are entry points. They delegate to 17 focused agents
+The five primary agents are entry points. They delegate to 20 focused agents
 using the host's native subagent mechanism (`Agent` in Claude Code, `Task` in
 OpenCode).
 
 | Primary agent | Workflow |
 |---|---|
-| `sdlc-plan` | Idea → discovery → strategy → PRD → technical design → task handoff |
-| `sdlc-build` | Scope → optional QA plan → task briefs → worker/reviewer pipelines |
-| `debugger` | Evidence gathering → root cause → approved fix route |
-| `security-reviewer` | Four parallel scanners → consolidated report → remediation route |
+| `sdlc-plan` | Idea → product intent → business slice → EARS/BDD → design/security → tasks |
+| `sdlc-build` | Approved change → QA/TDD briefs → worker/reviewer → evidence |
+| `debugger` | Report/logs/telemetry → root cause → traceable regression fix |
+| `security-reviewer` | Threat-model context → four scanners → remediation changes |
 | `tech-storyteller` | Technical blog posts, explainers, case studies, and launch narratives |
 
 Supporting agents:
 
 | Area | Agents |
 |---|---|
-| Product planning | `discovery`, `strategist`, `pm-writer`, `system-architect` |
+| Product and behavior | `discovery`, `strategist`, `pm-writer`, `change-spec-writer`, `system-architect` |
 | Delivery | `spec`, `spec-tasks`, `qa-strategist`, `architect`, `builder-worker`, `builder-reviewer` |
-| Security | `secrets-scanner`, `code-vuln-scanner`, `deps-scanner`, `config-scanner` |
-| Standalone | `spec-archaeologist`, `spec-drift-detector`, `tech-writer` |
+| Security | `threat-modeler`, `secrets-scanner`, `code-vuln-scanner`, `deps-scanner`, `config-scanner` |
+| Release and maintenance | `release-verifier`, `spec-archaeologist`, `spec-drift-detector`, `tech-writer` |
 
 The deprecated `security-pre-reviewer` is intentionally not packaged. Its
 security and quality gates are embedded in `architect`.
+
+## AISDLC artifact contract
+
+The workflow deliberately separates durable repository intent, executable
+artifacts, external evidence, and ephemeral agent handoffs.
+
+```text
+docs/
+├── product/<product-or-capability>.md
+├── changes/<issue-id>.md
+├── adr/ADR-NNNN-<slug>.md
+├── architecture/model.likec4
+├── domain/{glossary.md,invariants.md,model.mmd}
+└── security/threat-model.md
+```
+
+`docs/changes/<issue-id>.md` is the control artifact for one independently
+valuable business slice. It contains Why, Scope, EARS requirements, BDD
+scenarios, design triggers, plan, traceability, and evidence anchors.
+
+Tests, native API/event schemas, migrations, infrastructure, and application
+code remain executable artifacts. Jira/GitHub/Beads work items, pull requests,
+CI/e2e runs, security scans, deployments, production verification, and risk
+acceptance remain external records linked from the change artifact. Shared
+context, Task Briefs, Worker Summaries, Review Verdicts, and drift reports are
+ephemeral handoffs rather than competing sources of truth.
+
+The end-to-end flow is:
+
+```text
+Discovery → product intent → business slice → EARS → BDD → triggered design and
+threat model → TDD implementation → independent review → CI/security evidence →
+deployment → production verification → drift/maintenance
+```
+
+Human approval is required at product, behavior, design/security, remediation,
+and production-mutation gates. Merge alone never marks a change verified.
 
 ## Cross-host compatibility
 
@@ -104,19 +144,19 @@ apply stricter Claude permissions in the consuming project when required.
 
 ## Beads is optional
 
-Several workflows can persist task briefs with
+Several workflows can mirror task briefs with
 [Beads](https://github.com/steveyegge/beads). If `bd` is unavailable, agents
 must continue with an explicit Markdown handoff and report that the task was not
-persisted. Beads is an enhancement, not an installation requirement.
+persisted. The repository change artifact stays canonical either way.
 
 ## Package layout
 
 ```text
 apm.yml
 .apm/
-  agents/          # 22 flat .agent.md files; logical groups are documented above
-  prompts/         # 4 cross-host slash commands
-  instructions/    # shared operating principles
+  agents/          # 25 flat .agent.md files; logical groups are documented above
+  prompts/         # 7 cross-host slash commands
+  instructions/    # operating principles and canonical artifact contract
   skills/          # API security checklist
 scripts/
   validate-package.sh

@@ -26,6 +26,13 @@ You **can** write and edit documentation files. You **can** run limited git and
 bd commands to inspect history and issue context for changelog generation.
 You **cannot** run arbitrary bash commands.
 
+Follow the AISDLC artifact contract. Do not create alternate PRDs, change specs,
+ADRs, architecture models, domain definitions, or threat models. When documenting
+an API/event/data shape, treat its native OpenAPI/AsyncAPI/JSON Schema/Protobuf/
+GraphQL/SQL artifact as canonical and link to it rather than maintaining a second
+Markdown contract. A migration guide explains an executable migration; it never
+replaces the migration itself.
+
 > **Evidence before claims.** No documentation may be marked complete without
 > cross-checking every public API, parameter type, and code example against the
 > actual source. A doc that contradicts the code is worse than no doc.

@@ -28,7 +28,7 @@ apm pack --dry-run
 
 ## Architecture
 
-There are 22 active agents: five primary entry points and 17 supporting agents.
+There are 25 active agents: five primary entry points and 20 supporting agents.
 Orchestrators delegate using the host's native subagent mechanism (`Agent` in
 Claude Code, `Task` in OpenCode).
 
@@ -36,10 +36,10 @@ Claude Code, `Task` in OpenCode).
 
 | Agent | Purpose |
 |---|---|
-| `sdlc-plan` | Idea → discovery → strategy → PRD → technical design → tasks |
-| `sdlc-build` | Scope → QA/plan as needed → task briefs → workers/reviewers |
-| `debugger` | Root-cause investigation and approved fix routing |
-| `security-reviewer` | Parallel security scan and remediation routing |
+| `sdlc-plan` | Product intent → business slice → EARS/BDD → design/security → tasks |
+| `sdlc-build` | Approved change → QA/TDD briefs → workers/reviewers → evidence |
+| `debugger` | Logs/telemetry → root cause → traceable regression fix |
+| `security-reviewer` | Threat-model context → parallel scan → remediation changes |
 | `tech-storyteller` | Technical narrative and marketing content |
 
 ### Planning agents
@@ -49,7 +49,8 @@ Claude Code, `Task` in OpenCode).
 | `discovery` | Users, personas, competitors, journeys, and evidence |
 | `strategist` | Strategic options, OKRs, PR/FAQ, and hypothesis |
 | `pm-writer` | PRDs, feature specs, and product briefs |
-| `system-architect` | Technical design, data, APIs, and architecture |
+| `change-spec-writer` | Business slices, EARS requirements, BDD, and evidence anchors |
+| `system-architect` | Change design and canonical architecture/ADR/domain curation |
 
 ### Delivery agents
 
@@ -78,6 +79,9 @@ embedded in `architect`.
 | `deps-scanner` | CVEs, package age, integrity, and supply-chain risk |
 | `config-scanner` | Headers, CORS, cookies, TLS, debug, and infrastructure config |
 
+`threat-modeler` performs the separate design-time workflow for assets, flows,
+trust boundaries, STRIDE threats, controls, validation, and residual-risk ownership.
+
 ### Standalone agents
 
 | Agent | Purpose |
@@ -85,19 +89,24 @@ embedded in `architect`.
 | `spec-archaeologist` | Reconstruct PRDs, designs, ADRs, and contracts from code |
 | `spec-drift-detector` | Compare living specifications with current code |
 | `tech-writer` | API docs, READMEs, migrations, and changelogs |
+| `release-verifier` | Deployment identity, production scenarios, telemetry, rollback, and release evidence |
 
 ## Universal behavior
 
 1. **Evidence before claims.** Run the relevant verification and report its
    observed output before declaring completion.
 2. **Human-in-the-loop.** Stop at every marked approval gate.
-3. **Self-contained handoffs.** Include the goal, constraints, evidence,
+3. **Canonical behavior gate.** Non-trivial changes require an approved
+   `docs/changes/<issue-id>.md` with EARS requirements and BDD scenarios.
+4. **Self-contained handoffs.** Include the goal, constraints, evidence,
    expected output, and verification in every delegation.
-4. **Least privilege.** Respect the active agent's role and file boundaries.
-5. **Portable vocabulary.** Say “host subagent delegation tool” and “host
+5. **Least privilege.** Respect the active agent's role and file boundaries.
+6. **Portable vocabulary.** Say “host subagent delegation tool” and “host
    interactive question tool” in shared bodies when the native tool names differ.
-6. **Optional Beads.** Use `bd` when available. Otherwise continue with a
-   Markdown brief and explicitly report that persistence was skipped.
+7. **Optional Beads.** Mirror tasks when available; the repository change artifact
+   remains canonical. Otherwise continue with Markdown briefs.
+8. **Release evidence.** Merge is not verification. Only observed deployment and
+   production evidence may advance a change to `verified`.
 
 ## Prompt contract
 

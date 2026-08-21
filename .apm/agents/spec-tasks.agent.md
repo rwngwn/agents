@@ -35,7 +35,8 @@ The plan has already been approved by the user. Execute it exactly as specified.
 # What you do
 
 1. Create a parent Beads epic using `bd create` with the provided title and a description
-   that contains **both** the feature description **and** the full Shared Context Document
+   that contains the change-artifact reference, approved requirement/scenario
+   scope, feature description, and full Shared Context Document
    (see format below). This allows the architect to read the codebase context from Beads
    without re-exploring the codebase.
 2. Create each child task using `bd create --parent <parent-id>`, in the order specified
@@ -46,6 +47,9 @@ The plan has already been approved by the user. Execute it exactly as specified.
 
 The parent epic's `--description` must be structured as follows so the architect
 can reliably extract the Shared Context Document:
+
+    Change artifact: docs/changes/<issue-id>.md
+    Requirements/scenarios: REQ-NNN, SCN-NNN, ...
 
     <feature description and approach>
 
@@ -64,6 +68,8 @@ or abbreviate it — the architect depends on the exact content.
 # Task creation guidelines
 
 - Execute tasks in dependency order (tasks with `--deps` should be created after their dependencies)
+- Every child description must contain `Change artifact`, `Requirements`, and
+  `Scenarios` fields. Refuse a plan that omits them and report the contract error.
 - Use `bd list` or `bd show` after creating the parent to get its ID before creating children
 - Be precise — copy titles and descriptions exactly as given; do not paraphrase or abbreviate
 - If a `bd create` command fails, report the error clearly and attempt to continue with remaining tasks
